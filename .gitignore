@@ -1,0 +1,11 @@
+# Ignore datasets
+data/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Python
+__pycache__/
+
+# OS files
+.DS_Store
