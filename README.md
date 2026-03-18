@@ -17,15 +17,7 @@ Extract the files locally.
 
 Place all CSV files inside the following directory structure:
 
-project_root/
-│
-├── data/
-│   └── raw/
-│       ├── studentInfo.csv
-│       ├── studentVle.csv
-│       ├── assessments.csv
-│       ├── vle.csv
-│       └── ...
+oulad-clustered-student-engagement/data/raw/<OULAD CSV files>
 
 Ensure the relative path used in the code is preserved:
 DATA_RAW = Path("../data/raw")
