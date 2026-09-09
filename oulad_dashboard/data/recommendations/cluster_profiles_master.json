@@ -1,0 +1,52 @@
+[
+  {
+    "cluster_id":0,
+    "label":"Mixed Learning Pattern",
+    "summary":"This historical behavioural cluster shows a mixed learning pattern without one dominant behaviour.",
+    "strengths":[
+
+    ],
+    "opportunities":[
+
+    ],
+    "n_historical_learners":14246
+  },
+  {
+    "cluster_id":1,
+    "label":"Deadline-Concentrated Pattern",
+    "summary":"This historical behavioural cluster shows relative strengths in Course Materials; more room to build Study Timing and Study Consistency.",
+    "strengths":[
+      "Course Materials"
+    ],
+    "opportunities":[
+      "Study Timing",
+      "Study Consistency"
+    ],
+    "n_historical_learners":276
+  },
+  {
+    "cluster_id":2,
+    "label":"Mixed Learning Pattern",
+    "summary":"This historical behavioural cluster shows relative strengths in Study Timing.",
+    "strengths":[
+      "Study Timing"
+    ],
+    "opportunities":[
+
+    ],
+    "n_historical_learners":3454
+  },
+  {
+    "cluster_id":3,
+    "label":"Irregular Engagement Pattern",
+    "summary":"This historical behavioural cluster shows more room to build Study Spacing and Course Materials.",
+    "strengths":[
+
+    ],
+    "opportunities":[
+      "Study Spacing",
+      "Course Materials"
+    ],
+    "n_historical_learners":1574
+  }
+]

@@ -1,0 +1,26 @@
+[
+  {
+    "cluster_id":0,
+    "label":"Mixed Learning Pattern",
+    "summary":"This historical behavioural cluster shows relative strengths in Study Timing.",
+    "strengths":[
+      "Study Timing"
+    ],
+    "opportunities":[
+
+    ],
+    "n_historical_learners":3292
+  },
+  {
+    "cluster_id":1,
+    "label":"Mixed Learning Pattern",
+    "summary":"This historical behavioural cluster shows a mixed learning pattern without one dominant behaviour.",
+    "strengths":[
+
+    ],
+    "opportunities":[
+
+    ],
+    "n_historical_learners":16258
+  }
+]

@@ -1,0 +1,74 @@
+[
+  {
+    "cluster_id":0,
+    "label":"Mixed Learning Pattern",
+    "summary":"This historical behavioural cluster shows a mixed learning pattern without one dominant behaviour.",
+    "strengths":[
+
+    ],
+    "opportunities":[
+
+    ],
+    "n_historical_learners":6543
+  },
+  {
+    "cluster_id":1,
+    "label":"Mixed Learning Pattern",
+    "summary":"This historical behavioural cluster shows a mixed learning pattern without one dominant behaviour.",
+    "strengths":[
+
+    ],
+    "opportunities":[
+
+    ],
+    "n_historical_learners":3970
+  },
+  {
+    "cluster_id":2,
+    "label":"Mixed Learning Pattern",
+    "summary":"This historical behavioural cluster shows a mixed learning pattern without one dominant behaviour.",
+    "strengths":[
+
+    ],
+    "opportunities":[
+
+    ],
+    "n_historical_learners":3064
+  },
+  {
+    "cluster_id":3,
+    "label":"Mixed Learning Pattern",
+    "summary":"This historical behavioural cluster shows more room to build Study Consistency.",
+    "strengths":[
+
+    ],
+    "opportunities":[
+      "Study Consistency"
+    ],
+    "n_historical_learners":2306
+  },
+  {
+    "cluster_id":4,
+    "label":"Mixed Learning Pattern",
+    "summary":"This historical behavioural cluster shows relative strengths in Study Timing; more room to build Study Consistency.",
+    "strengths":[
+      "Study Timing"
+    ],
+    "opportunities":[
+      "Study Consistency"
+    ],
+    "n_historical_learners":979
+  },
+  {
+    "cluster_id":5,
+    "label":"Mixed Learning Pattern",
+    "summary":"This historical behavioural cluster shows more room to build Study Consistency.",
+    "strengths":[
+
+    ],
+    "opportunities":[
+      "Study Consistency"
+    ],
+    "n_historical_learners":2688
+  }
+]

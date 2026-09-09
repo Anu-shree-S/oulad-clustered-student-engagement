@@ -1,0 +1,26 @@
+[
+  {
+    "cluster_id":0,
+    "label":"Deadline-Concentrated Pattern",
+    "summary":"This historical behavioural cluster shows more room to build Study Timing.",
+    "strengths":[
+
+    ],
+    "opportunities":[
+      "Study Timing"
+    ],
+    "n_historical_learners":305
+  },
+  {
+    "cluster_id":1,
+    "label":"Mixed Learning Pattern",
+    "summary":"This historical behavioural cluster shows a mixed learning pattern without one dominant behaviour.",
+    "strengths":[
+
+    ],
+    "opportunities":[
+
+    ],
+    "n_historical_learners":19245
+  }
+]
