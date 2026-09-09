@@ -454,13 +454,23 @@ def _prepare_vle(raw: dict, module: str, presentation: str) -> pd.DataFrame:
     course = course[course["date"].ge(0)].copy()
     course["week"] = (course["date"] // 7 + 1).astype(int)
 
-    meta = raw.get("vle_meta", pd.DataFrame())
-    if isinstance(meta, pd.DataFrame) and not meta.empty and {"id_site", "activity_type"}.issubset(meta.columns) and "id_site" in course.columns:
-        lookup = meta[["id_site", "activity_type"]].drop_duplicates("id_site")
-        course = course.merge(lookup, on="id_site", how="left")
+    # Hosted deployment already carries a compact activity_type category in
+    # dashboard_weekly_vle.parquet, so no raw vle.csv lookup is required.
+    if "activity_type" in course.columns and course["activity_type"].notna().any():
         course["dimension"] = course["activity_type"].map(_engagement_dimension)
     else:
-        course["dimension"] = "other"
+        meta = raw.get("vle_meta", pd.DataFrame())
+        if (
+            isinstance(meta, pd.DataFrame)
+            and not meta.empty
+            and {"id_site", "activity_type"}.issubset(meta.columns)
+            and "id_site" in course.columns
+        ):
+            lookup = meta[["id_site", "activity_type"]].drop_duplicates("id_site")
+            course = course.merge(lookup, on="id_site", how="left")
+            course["dimension"] = course["activity_type"].map(_engagement_dimension)
+        else:
+            course["dimension"] = "other"
     return course
 
 

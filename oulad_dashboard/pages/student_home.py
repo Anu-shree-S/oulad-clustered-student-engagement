@@ -628,14 +628,25 @@ def _engagement_current_quarter(
     course = course[course["date"].ge(0)].copy()
     course["week"] = (course["date"] // 7 + 1).astype(int)
 
-    vle_meta = _load_vle_metadata()
-    dimensions_available = isinstance(vle_meta, pd.DataFrame) and not vle_meta.empty and {"id_site", "activity_type"}.issubset(vle_meta.columns)
-    if dimensions_available:
-        lookup = vle_meta[["id_site", "activity_type"]].drop_duplicates("id_site")
-        course = course.merge(lookup, on="id_site", how="left")
+    # Hosted deployment exports activity_type directly in dashboard_weekly_vle.parquet.
+    # Keep the raw-vle metadata path only as a local backwards-compatible fallback.
+    if "activity_type" in course.columns and course["activity_type"].notna().any():
+        dimensions_available = True
         course["engagement_dim"] = course["activity_type"].apply(_engagement_dimension)
     else:
-        course["engagement_dim"] = "other"
+        vle_meta = _load_vle_metadata()
+        dimensions_available = (
+            isinstance(vle_meta, pd.DataFrame)
+            and not vle_meta.empty
+            and {"id_site", "activity_type"}.issubset(vle_meta.columns)
+            and "id_site" in course.columns
+        )
+        if dimensions_available:
+            lookup = vle_meta[["id_site", "activity_type"]].drop_duplicates("id_site")
+            course = course.merge(lookup, on="id_site", how="left")
+            course["engagement_dim"] = course["activity_type"].apply(_engagement_dimension)
+        else:
+            course["engagement_dim"] = "other"
 
     # Class size comes from ALL enrolled students, not only students with VLE rows.
     if isinstance(info, pd.DataFrame) and not info.empty:
