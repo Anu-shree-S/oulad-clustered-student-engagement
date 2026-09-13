@@ -1906,66 +1906,207 @@ def _population_by_module(info: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-def _render_population_chart(info: pd.DataFrame):
-    """Stacked module population with segment counts and module totals visible."""
-    population = _population_by_module(info)
-    if population.empty:
+def _render_population_chart(summary: pd.DataFrame, quarter: str):
+    """Switchable programme population chart by support status or prediction flag.
+
+    The programme currently contains one held-out presentation per module, so the
+    x-axis is module only.  Each stacked segment shows the number of learners in
+    that category, while the total learner count is labelled above each module bar.
+    """
+    if summary is None or summary.empty or not {"id_student", "code_module"}.issubset(summary.columns):
         render_empty_state(
             "Population view unavailable",
-            "Student enrolment data are required to compare programme populations.",
+            "Recommendation outputs are required to compare programme populations by module.",
         )
         return
 
-    modules = sorted(population["code_module"].unique())
-    presentations = sorted(population["code_presentation"].unique())
-    totals = (
-        population.groupby("code_module")["Students"].sum()
-        .reindex(modules, fill_value=0)
-        .astype(int)
+    work = summary.copy()
+    work["id_student"] = pd.to_numeric(work["id_student"], errors="coerce")
+    work = work.dropna(subset=["id_student", "code_module"]).copy()
+    work["id_student"] = work["id_student"].astype(int)
+    work["code_module"] = work["code_module"].astype(str)
+
+    # One learner-enrolment per module in the held-out scope.
+    work = work.drop_duplicates(["id_student", "code_module"], keep="last")
+    modules = sorted(work["code_module"].dropna().unique().tolist())
+    if not modules:
+        render_empty_state(
+            "Population view unavailable",
+            "No module-level learner records are available in the current programme scope.",
+        )
+        return
+
+    view = st.radio(
+        "Population view",
+        ["Support status", "Prediction flag"],
+        horizontal=True,
+        key=f"admin_population_view_{quarter}",
     )
 
     fig = go.Figure()
-    for presentation in presentations:
-        sub = population[population["code_presentation"].eq(presentation)]
-        lookup = sub.set_index("code_module")["Students"]
-        values = [int(lookup.get(m, 0)) for m in modules]
-        fig.add_trace(go.Bar(
-            x=modules,
-            y=values,
-            name=str(presentation),
-            text=[f"{v:,}" if v > 0 else "" for v in values],
-            textposition="inside",
-            insidetextanchor="middle",
-            hovertemplate=(
-                "Module %{x}<br>Presentation " + str(presentation) +
-                "<br>%{y:,} students<extra></extra>"
-            ),
-        ))
 
+    if view == "Support status":
+        st.caption(
+            "Each module bar is split by behavioural support status. Segment labels show learner counts; "
+            "the total number of learners in the module is shown above the bar."
+        )
+
+        if "Support Status" not in work.columns:
+            work["Support Status"] = work.apply(_normalise_support, axis=1)
+
+        # Softer pastel fills derived from the existing TrackWise support palette.
+        # These keep the same green / amber / red semantics without making the bars
+        # visually heavier than the surrounding dashboard cards.
+        categories = [
+            ("On Track", "On Track", "#D5F0DD"),
+            ("Needs Attention", "Needs Support", "#FCE8BC"),
+            ("Priority Support", "Priority Support", "#F8D4D4"),
+        ]
+
+        for raw_status, display_status, colour in categories:
+            counts = (
+                work[work["Support Status"].eq(raw_status)]
+                .groupby("code_module")["id_student"]
+                .nunique()
+                .reindex(modules, fill_value=0)
+                .astype(int)
+            )
+            values = counts.tolist()
+            fig.add_trace(go.Bar(
+                x=modules,
+                y=values,
+                name=display_status,
+                marker=dict(
+                    color=colour,
+                    line=dict(color="rgba(255,255,255,0.95)", width=1.1),
+                ),
+                text=[f"{v:,}" if v > 0 else "" for v in values],
+                textposition="inside",
+                insidetextanchor="middle",
+                textfont=dict(color="#344054", size=12),
+                hovertemplate=(
+                    "Module %{x}<br>" + display_status + ": %{y:,} learners<extra></extra>"
+                ),
+            ))
+
+        totals = (
+            work.groupby("code_module")["id_student"]
+            .nunique()
+            .reindex(modules, fill_value=0)
+            .astype(int)
+        )
+        chart_key = f"admin_population_support_{quarter}"
+
+    else:
+        st.caption(
+            "Each module bar is split by the checkpoint prediction flag. Segment labels show learner counts; "
+            "the total number of learners with a model prediction is shown above the bar."
+        )
+
+        if "prediction_available" in work.columns:
+            available = work["prediction_available"].fillna(False).astype(bool)
+        elif "risk_probability" in work.columns:
+            available = pd.to_numeric(work["risk_probability"], errors="coerce").notna()
+        else:
+            available = pd.Series(False, index=work.index)
+
+        pred_work = work[available].copy()
+        if pred_work.empty or "predicted_class" not in pred_work.columns:
+            render_empty_state(
+                f"Prediction population unavailable for {quarter}",
+                "No separate model prediction is available for this checkpoint. Behavioural support status remains available above.",
+            )
+            return
+
+        pred_work["_predicted_class"] = pd.to_numeric(
+            pred_work["predicted_class"], errors="coerce"
+        )
+        pred_work = pred_work[pred_work["_predicted_class"].isin([0, 1])].copy()
+        if pred_work.empty:
+            render_empty_state(
+                f"Prediction population unavailable for {quarter}",
+                "No valid binary prediction flags are available for this checkpoint.",
+            )
+            return
+
+        # Slightly richer prediction colours than the support-status pastels.
+        # White in-bar labels improve contrast and keep this view visually distinct.
+        categories = [
+            (0, "Unflagged", "#587CB5"),
+            (1, "Flagged", "#C65F6A"),
+        ]
+        for flag_value, display_status, colour in categories:
+            counts = (
+                pred_work[pred_work["_predicted_class"].eq(flag_value)]
+                .groupby("code_module")["id_student"]
+                .nunique()
+                .reindex(modules, fill_value=0)
+                .astype(int)
+            )
+            values = counts.tolist()
+            fig.add_trace(go.Bar(
+                x=modules,
+                y=values,
+                name=display_status,
+                marker=dict(
+                    color=colour,
+                    line=dict(color="rgba(255,255,255,0.90)", width=1.0),
+                ),
+                text=[f"{v:,}" if v > 0 else "" for v in values],
+                textposition="inside",
+                insidetextanchor="middle",
+                textfont=dict(color="#FFFFFF", size=12),
+                hovertemplate=(
+                    "Module %{x}<br>" + display_status + ": %{y:,} learners<extra></extra>"
+                ),
+            ))
+
+        totals = (
+            pred_work.groupby("code_module")["id_student"]
+            .nunique()
+            .reindex(modules, fill_value=0)
+            .astype(int)
+        )
+        chart_key = f"admin_population_prediction_{quarter}"
+
+    # Total labels above each stacked bar.
+    max_total = int(totals.max()) if len(totals) else 0
     for module in modules:
         total = int(totals.get(module, 0))
+        if total <= 0:
+            continue
         fig.add_annotation(
             x=module,
             y=total,
-            text=f"<b>{total:,}</b>",
+            text=f"<b>Total: {total:,}</b>",
             showarrow=False,
-            yshift=15,
-            font=dict(size=12),
+            yshift=14,
+            font=dict(size=12, color="#344054"),
         )
 
     _base_figure_layout(
         fig,
         x_title="Module",
-        y_title="Enrolled students",
-        height=390,
+        y_title="Number of learners",
+        height=410,
     )
     fig.update_layout(
         barmode="stack",
         uniformtext_minsize=10,
         uniformtext_mode="hide",
+        margin=dict(l=10, r=10, t=55, b=10),
+        legend=dict(
+            orientation="h",
+            y=1.13,
+            x=0,
+            title=None,
+            bgcolor="rgba(0,0,0,0)",
+        ),
     )
-    st.plotly_chart(fig, use_container_width=True, key="admin_population_modules")
+    if max_total > 0:
+        fig.update_yaxes(range=[0, max_total * 1.14])
 
+    st.plotly_chart(fig, use_container_width=True, key=chart_key)
 
 def _raw_student_registration() -> pd.DataFrame:
     try:
@@ -3516,10 +3657,10 @@ def render_admin_dashboard(user):
 
         st.markdown("### Programme population")
         st.caption(
-            "Learner population across the included module-presentations. "
-            "Training and earlier presentations are not included."
+            "Compare module populations either by behavioural support status or by the checkpoint model flag. "
+            "Counts are restricted to the same held-out programme scope used throughout this dashboard."
         )
-        _render_population_chart(info)
+        _render_population_chart(summary, quarter)
 
         st.divider()
         st.markdown(f"### Engagement during {quarter}")
