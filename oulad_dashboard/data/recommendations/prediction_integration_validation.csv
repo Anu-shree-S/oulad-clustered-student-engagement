@@ -1,0 +1,6 @@
+check,passed
+required_schema,True
+unique_student_module_presentation_checkpoint,True
+risk_probability_in_0_1,True
+threshold_in_0_1,True
+binary_predicted_class,True

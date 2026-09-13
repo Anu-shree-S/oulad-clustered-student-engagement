@@ -37,6 +37,7 @@ from services.learning_service import (
     QUARTER_LABELS,
     analytics_status,
     load_behaviour_table,
+    prediction_for_student,
     student_behaviour_tiles,
     student_recommendation_row,
     student_recommendations,
@@ -294,6 +295,68 @@ STUDENT_STATUS_STYLES = """
 .tw-priority-rec .reason {
     color: #53657d; font-size: .84rem; line-height: 1.45; margin-top: .55rem;
 }
+
+/* Prediction is deliberately presented as a separate model signal.
+   It must not visually replace the behavioural support status. */
+.tw-prediction-card {
+    border-radius: 18px;
+    padding: 20px 24px;
+    margin: .6rem 0 1.15rem;
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.05);
+}
+.tw-prediction-card .eyebrow {
+    font-size: .74rem;
+    font-weight: 800;
+    letter-spacing: .065em;
+    text-transform: uppercase;
+    color: #53657d;
+}
+.tw-prediction-card .prediction-row {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    margin: .45rem 0 .55rem;
+}
+.tw-prediction-card .probability {
+    font-size: 2rem;
+    line-height: 1;
+    font-weight: 800;
+    color: #102542;
+}
+.tw-prediction-card .probability-label {
+    display: block;
+    margin-top: .25rem;
+    color: #667085;
+    font-size: .78rem;
+}
+.tw-prediction-card .prediction-status {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #102542;
+    padding-bottom: .12rem;
+}
+.tw-prediction-card p {
+    margin: 0 !important;
+    color: #53657d !important;
+    font-size: .86rem !important;
+    line-height: 1.5 !important;
+}
+.tw-prediction-success {
+    background: #edf8f0;
+    border: 1px solid #c8e7d0;
+    border-left: 6px solid #69ad79;
+}
+.tw-prediction-warning {
+    background: #fff4e5;
+    border: 1px solid #f2d4a8;
+    border-left: 6px solid #d59a43;
+}
+.tw-prediction-neutral {
+    background: #f3f6fa;
+    border: 1px solid #dbe3ed;
+    border-left: 6px solid #98a7ba;
+}
 </style>
 """
 
@@ -330,6 +393,96 @@ def _render_learning_support_status(title: str, message: str, tone: str):
         """,
         unsafe_allow_html=True,
     )
+
+
+def _prediction_payload(prediction: dict) -> dict:
+    """Normalise the service response into Student-safe display values."""
+    prediction = prediction if isinstance(prediction, dict) else {}
+
+    probability = _safe_number(
+        prediction.get("risk_probability", prediction.get("probability"))
+    )
+    predicted_class = _safe_number(prediction.get("predicted_class"))
+
+    if predicted_class is not None:
+        predicted_class = int(round(predicted_class))
+
+    if predicted_class == 1:
+        status = "Flagged for attention"
+        tone = "warning"
+    elif predicted_class == 0:
+        status = "Not flagged at this checkpoint"
+        tone = "success"
+    else:
+        status = str(prediction.get("prediction_status") or "Model estimate unavailable")
+        tone = "neutral"
+
+    return {
+        "available": bool(prediction) and probability is not None,
+        "probability": probability,
+        "predicted_class": predicted_class,
+        "status": status,
+        "tone": tone,
+        "model_name": prediction.get("model_name"),
+        "threshold": _safe_number(prediction.get("threshold")),
+        "checkpoint": prediction.get("checkpoint"),
+    }
+
+
+def _render_prediction_indicator(prediction: dict, quarter: str):
+    """Render model risk as a separate, non-deterministic early-warning signal."""
+    payload = _prediction_payload(prediction)
+
+    if not payload["available"]:
+        if str(quarter).upper() == "Q4":
+            st.info(
+                "No separate Q4 model estimate is available. "
+                "Your Q4 behavioural indicators and recommendations are still shown from "
+                "learning activity available at this checkpoint."
+            )
+        else:
+            st.info(
+                "A model risk estimate is not available for this learner at the selected checkpoint. "
+                "Behavioural support information is still available when recommendation data exist."
+            )
+        return
+
+    probability_pct = 100.0 * float(payload["probability"])
+    st.markdown(
+        f"""
+        <div class="tw-prediction-card tw-prediction-{payload['tone']}">
+          <div class="eyebrow">Model risk indicator</div>
+          <div class="prediction-row">
+            <div>
+              <div class="probability">{probability_pct:.0f}%</div>
+              <span class="probability-label">Model-estimated risk at this checkpoint</span>
+            </div>
+            <div class="prediction-status">{escape(payload['status'])}</div>
+          </div>
+          <p>
+            This is an early-warning model estimate based on information available at the selected
+            checkpoint. It is not a grade, a certainty, or an automated academic decision.
+            Your recommendations are generated separately from behavioural learning gaps.
+          </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    with st.expander("About this model estimate"):
+        st.caption(
+            "TrackWise keeps prediction and behavioural recommendations separate: "
+            "the model estimates risk, while recommendations describe actionable learning behaviours."
+        )
+        meta = []
+        if payload.get("checkpoint"):
+            meta.append(f"Checkpoint: {payload['checkpoint']}")
+        if payload.get("model_name"):
+            meta.append(f"Model: {payload['model_name']}")
+        if payload.get("threshold") is not None:
+            meta.append(f"Decision threshold: {100 * payload['threshold']:.1f}%")
+        if meta:
+            st.caption(" · ".join(meta))
 
 
 # -----------------------------------------------------------------------------
@@ -1767,9 +1920,19 @@ def render_student_dashboard(user):
 
 
     status = analytics_status(quarter)
+    connected_bits = []
+    if status.get("recommendations"):
+        connected_bits.append("behavioural recommendations")
+    if status.get("predictions"):
+        connected_bits.append("model prediction")
+    connected_text = (
+        "Connected: " + " and ".join(connected_bits) + "."
+        if connected_bits
+        else "Recommendation and prediction outputs are not available for this checkpoint."
+    )
     st.caption(
         f"Viewing data available up to **Week {end_week}** of this {course_weeks}-week presentation. "
-        + ("Behavioural recommendations are connected." if status.get("recommendations") else "Recommendation output is not available for this learner/checkpoint.")
+        + connected_text
     )
 
     # Prominent but supportive three-level learning-support status.
@@ -1780,6 +1943,12 @@ def render_student_dashboard(user):
         status_message,
         status_tone,
     )
+
+    # Prediction is a separate early-warning signal and never replaces behavioural support.
+    student_prediction = prediction_for_student(
+        student_id, module, presentation, quarter
+    )
+    _render_prediction_indicator(student_prediction, quarter)
 
     # Make the top-ranked behavioural recommendation explicit and actionable.
     priority_recs = student_recommendations(
@@ -1978,6 +2147,18 @@ def render_student_dashboard(user):
         if summary:
             visible_support, _, _ = _student_support_view(summary)
             st.info(f"**Current learning-support status:** {visible_support}")
+
+        prediction_view = _prediction_payload(student_prediction)
+        if prediction_view["available"]:
+            st.caption(
+                f"**Model signal:** {prediction_view['status']} "
+                f"({100 * prediction_view['probability']:.0f}% model-estimated risk). "
+                "The recommendations below are based on behavioural gaps, not generated from the model flag."
+            )
+        elif quarter == "Q4":
+            st.caption(
+                "No separate Q4 prediction is available; the recommendations below are based on Q4 behavioural data."
+            )
 
         _recommendation_cards(
             recs,

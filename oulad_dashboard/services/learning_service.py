@@ -19,14 +19,26 @@ from config.paths import BEHAVIOUR_DIR, PREDICTION_DIR, RECOMMENDATION_DIR
 from services.data_service import DataUnavailable, load_dashboard_data, load_student_info
 from services.privacy import build_student_display_map
 
+# Q1-Q4 are retained for the existing dashboard pages.  The prediction model
+# currently exports Q1, Q2, Q3 and a full-course ``master`` checkpoint.
 QUARTERS = ["Q1", "Q2", "Q3", "Q4"]
+PREDICTION_CHECKPOINTS = ["Q1", "Q2", "Q3", "master"]
 QUARTER_LABELS = {
     "Q1": "Q1 · Early",
     "Q2": "Q2 · Main checkpoint",
     "Q3": "Q3 · Refinement",
     "Q4": "Q4 · Late stage",
+    "master": "Final · Full course",
 }
-QUARTER_WEEK_END = {"Q1": 9, "Q2": 19, "Q3": 29, "Q4": 10_000}
+QUARTER_WEEK_END = {"Q1": 9, "Q2": 19, "Q3": 29, "Q4": 10_000, "master": 10_000}
+
+PREDICTION_KEYS = ["id_student", "code_module", "code_presentation", "quarter"]
+PREDICTION_VALUE_COLS = [
+    "risk_probability",
+    "predicted_class",
+    "threshold",
+    "model_name",
+]
 
 STUDENT_FEATURES = [
     ("study_consistency", "Study Consistency", ["active_weeks_ratio_{q}", "active_weeks_ratio_norm"], True),
@@ -103,16 +115,50 @@ def _load_path(path: Path | None) -> pd.DataFrame:
     return _read_table(str(path), stat.st_mtime_ns, stat.st_size)
 
 
+def _canonical_quarter(quarter: str | None) -> str:
+    """Normalise UI/checkpoint aliases without pretending Q4 is Master."""
+    text = str(quarter or "").strip()
+    upper = text.upper()
+    if upper in {"MASTER", "FINAL", "FULL", "FULL COURSE", "FULL_COURSE"}:
+        return "master"
+    if upper in {"Q1", "Q2", "Q3", "Q4"}:
+        return upper
+    return text
+
+
+def _data_roots() -> list[Path]:
+    """Return plausible dashboard data roots, de-duplicated in priority order."""
+    candidates = [
+        PREDICTION_DIR,
+        PREDICTION_DIR.parent,
+        RECOMMENDATION_DIR.parent,
+        BEHAVIOUR_DIR,
+        BEHAVIOUR_DIR.parent,
+    ]
+    roots: list[Path] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        p = Path(candidate)
+        key = str(p.resolve()) if p.exists() else str(p)
+        if key not in seen:
+            roots.append(p)
+            seen.add(key)
+    return roots
+
+
 def load_recommendation_summary(quarter: str) -> pd.DataFrame:
-    return _load_path(RECOMMENDATION_DIR / f"recommendation_summary_{quarter}.parquet")
+    q = _canonical_quarter(quarter)
+    return _load_path(RECOMMENDATION_DIR / f"recommendation_summary_{q}.parquet")
 
 
 def load_recommendation_details(quarter: str) -> pd.DataFrame:
-    return _load_path(RECOMMENDATION_DIR / f"recommendation_details_{quarter}.parquet")
+    q = _canonical_quarter(quarter)
+    return _load_path(RECOMMENDATION_DIR / f"recommendation_details_{q}.parquet")
 
 
 def load_cluster_profiles(quarter: str) -> pd.DataFrame:
-    return _load_path(RECOMMENDATION_DIR / f"cluster_profiles_{quarter}.json")
+    q = _canonical_quarter(quarter)
+    return _load_path(RECOMMENDATION_DIR / f"cluster_profiles_{q}.json")
 
 
 def load_quarter_comparison() -> pd.DataFrame:
@@ -120,36 +166,104 @@ def load_quarter_comparison() -> pd.DataFrame:
 
 
 def load_behaviour_table(quarter: str, cohort: str = "test") -> pd.DataFrame:
+    q = _canonical_quarter(quarter)
     cohort = "train" if cohort == "train" else "test"
-    return _load_path(BEHAVIOUR_DIR / f"ml_{quarter}_{cohort}.parquet")
+    return _load_path(BEHAVIOUR_DIR / f"ml_{q}_{cohort}.parquet")
 
 
 def _prediction_candidates() -> Iterable[Path]:
+    """Yield canonical prediction exports before any legacy/fallback filenames."""
     names = [
+        "dashboard_student_predictions.parquet",
+        "dashboard_student_predictions.csv",
         "student_predictions.parquet",
         "student_predictions.csv",
         "dashboard_predictions.parquet",
         "dashboard_predictions.csv",
+        # The integrated file is a safe fallback because it preserves the
+        # prediction pipeline's canonical probability/class/model fields.
+        "dashboard_student_quarter.parquet",
+        "dashboard_student_quarter.csv",
     ]
-    for name in names:
-        yield PREDICTION_DIR / name
-    if PREDICTION_DIR.is_dir():
-        yield from sorted(PREDICTION_DIR.glob("*prediction*.parquet"))
-        yield from sorted(PREDICTION_DIR.glob("*prediction*.csv"))
+    seen: set[str] = set()
+    for root in _data_roots():
+        for name in names:
+            path = root / name
+            key = str(path)
+            if key not in seen:
+                seen.add(key)
+                yield path
+
+    # Legacy discovery remains last and only valid prediction-shaped files are
+    # accepted by ``load_prediction_data`` below.
+    for root in _data_roots():
+        if root.is_dir():
+            for pattern in ("*prediction*.parquet", "*prediction*.csv"):
+                for path in sorted(root.glob(pattern)):
+                    key = str(path)
+                    if key not in seen:
+                        seen.add(key)
+                        yield path
+
+
+def _normalise_prediction_frame(df: pd.DataFrame) -> pd.DataFrame:
+    if df is None or df.empty:
+        return pd.DataFrame()
+    required = set(PREDICTION_KEYS + PREDICTION_VALUE_COLS)
+    if not required.issubset(df.columns):
+        return pd.DataFrame()
+
+    out = df.copy()
+    out["quarter"] = out["quarter"].map(_canonical_quarter)
+    out["id_student"] = pd.to_numeric(out["id_student"], errors="coerce").astype("Int64")
+    out["risk_probability"] = pd.to_numeric(out["risk_probability"], errors="coerce")
+    out["predicted_class"] = pd.to_numeric(out["predicted_class"], errors="coerce").astype("Int64")
+    out["threshold"] = pd.to_numeric(out["threshold"], errors="coerce")
+    out = out.dropna(subset=["id_student"]).copy()
+
+    # Keep one canonical model result per enrolment/checkpoint.  The backend
+    # verification guarantees uniqueness for the primary export; this also
+    # protects the dashboard if a fallback file contains duplicate rows.
+    out = out.drop_duplicates(PREDICTION_KEYS, keep="first")
+    return out
 
 
 def load_prediction_data() -> pd.DataFrame:
     for path in _prediction_candidates():
-        if path.is_file():
-            return _load_path(path)
+        if not path.is_file():
+            continue
+        frame = _normalise_prediction_frame(_load_path(path))
+        if not frame.empty:
+            return frame
+    return pd.DataFrame()
+
+
+def _prediction_slice(quarter: str) -> pd.DataFrame:
+    """Return predictions for the exact requested checkpoint only."""
+    q = _canonical_quarter(quarter)
+    df = load_prediction_data()
+    if df.empty or "quarter" not in df.columns:
+        return pd.DataFrame()
+    return df[df["quarter"].eq(q)].copy()
+
+
+def load_dashboard_student_quarter() -> pd.DataFrame:
+    """Load the integrated deployment table generated by the recommender."""
+    for root in _data_roots():
+        for name in ("dashboard_student_quarter.parquet", "dashboard_student_quarter.csv"):
+            path = root / name
+            if path.is_file():
+                return _load_path(path)
     return pd.DataFrame()
 
 
 def analytics_status(quarter: str) -> dict:
+    # Prediction status is checkpoint-specific.  Q4 correctly reports False
+    # until a genuine Q4 model export exists; it never falls back to Q1/Q2/Q3.
     return {
         "recommendations": not load_recommendation_summary(quarter).empty,
         "behaviour": not load_behaviour_table(quarter).empty,
-        "predictions": not load_prediction_data().empty,
+        "predictions": not _prediction_slice(quarter).empty,
     }
 
 
@@ -351,9 +465,13 @@ def student_learning_mix(student_id: int, module: str, presentation: str, quarte
 
 
 def student_behaviour_trend(student_id: int, module: str, presentation: str, upto_quarter: str) -> list[dict]:
-    q_index = QUARTERS.index(upto_quarter)
+    checkpoint = _canonical_quarter(upto_quarter)
+    timeline = ["Q1", "Q2", "Q3", "master"] if checkpoint == "master" else QUARTERS
+    if checkpoint not in timeline:
+        return []
+    q_index = timeline.index(checkpoint)
     history: dict[str, list[tuple[str, str]]] = {}
-    for q in QUARTERS[:q_index + 1]:
+    for q in timeline[:q_index + 1]:
         for tile in student_behaviour_tiles(student_id, module, presentation, q):
             history.setdefault(tile["label"], []).append((q, tile["status"]))
     rank = {"Opportunity": 0, "Building": 1, "Observed": 1, "Steady": 2, "Strong": 3}
@@ -368,26 +486,47 @@ def student_behaviour_trend(student_id: int, module: str, presentation: str, upt
 
 
 def prediction_for_student(student_id: int, module: str, presentation: str, quarter: str) -> dict:
-    df = load_prediction_data()
-    frame = _filter_enrolment(df, student_id, module, presentation)
+    """Return the saved model output for one exact learner/checkpoint."""
+    frame = _filter_enrolment(
+        _prediction_slice(quarter),
+        student_id,
+        module,
+        presentation,
+    )
     if frame.empty:
         return {}
-    if "quarter" in frame.columns:
-        q = frame[frame["quarter"].astype(str).str.upper() == quarter.upper()]
-        if not q.empty:
-            frame = q
+
     row = frame.iloc[0]
-    probability_col = _first_present(frame.columns, ["risk_probability", "probability", "predicted_probability", "risk_score"])
-    class_col = _first_present(frame.columns, ["predicted_class", "prediction", "predicted_label"])
-    probability = None
-    if probability_col:
-        parsed = pd.to_numeric(pd.Series([row.get(probability_col)]), errors="coerce").iloc[0]
-        probability = None if pd.isna(parsed) else float(parsed)
+    probability = pd.to_numeric(
+        pd.Series([row.get("risk_probability")]), errors="coerce"
+    ).iloc[0]
+    predicted_class = pd.to_numeric(
+        pd.Series([row.get("predicted_class")]), errors="coerce"
+    ).iloc[0]
+    threshold = pd.to_numeric(
+        pd.Series([row.get("threshold")]), errors="coerce"
+    ).iloc[0]
+
+    probability_value = None if pd.isna(probability) else float(probability)
+    class_value = None if pd.isna(predicted_class) else int(predicted_class)
+    threshold_value = None if pd.isna(threshold) else float(threshold)
+    status = (
+        "Flagged for Attention" if class_value == 1
+        else "Not Flagged" if class_value == 0
+        else None
+    )
+
     return {
-        "probability": probability,
-        "predicted_class": None if not class_col else row.get(class_col),
-        "model_name": row.get("model_name") if "model_name" in frame.columns else None,
-        "threshold": row.get("threshold") if "threshold" in frame.columns else None,
+        # ``probability`` is retained for compatibility with the current pages.
+        "probability": probability_value,
+        "risk_probability": probability_value,
+        "predicted_class": class_value,
+        "prediction_status": status,
+        "risk_label": status,
+        "model_name": row.get("model_name"),
+        "threshold": threshold_value,
+        "checkpoint": _canonical_quarter(quarter),
+        "available": probability_value is not None,
     }
 
 
@@ -418,11 +557,107 @@ def assessment_progress(student_id: int, module: str, presentation: str, quarter
     return frame[["Task", "assessment_type", "score", "date"]]
 
 
+def _attach_prediction_context(frame: pd.DataFrame, quarter: str) -> pd.DataFrame:
+    """Fill prediction context into recommendation rows without changing support fields."""
+    if frame is None or frame.empty:
+        return pd.DataFrame() if frame is None else frame.copy()
+
+    out = frame.copy()
+    pred = _prediction_slice(quarter)
+    if pred.empty:
+        if "prediction_available" not in out.columns:
+            out["prediction_available"] = False
+        return out
+
+    keys = ["id_student", "code_module", "code_presentation"]
+    if not set(keys).issubset(out.columns):
+        return out
+
+    pred_cols = keys + [
+        "risk_probability",
+        "predicted_class",
+        "threshold",
+        "model_name",
+    ]
+    pred = pred[pred_cols].drop_duplicates(keys)
+
+    merged = out.merge(pred, on=keys, how="left", validate="one_to_one", suffixes=("", "__pred"))
+    for col in ["risk_probability", "predicted_class", "threshold", "model_name"]:
+        fallback = f"{col}__pred"
+        if fallback not in merged.columns:
+            continue
+        if col in out.columns:
+            merged[col] = merged[col].where(merged[col].notna(), merged[fallback])
+        else:
+            merged[col] = merged[fallback]
+        merged.drop(columns=fallback, inplace=True)
+
+    probability = pd.to_numeric(merged.get("risk_probability"), errors="coerce")
+    classes = pd.to_numeric(merged.get("predicted_class"), errors="coerce")
+    merged["prediction_available"] = probability.notna()
+    if "prediction_status" not in merged.columns:
+        merged["prediction_status"] = np.where(
+            classes.eq(1), "Flagged for Attention",
+            np.where(classes.eq(0), "Not Flagged", None),
+        )
+    if "prediction_threshold" not in merged.columns and "threshold" in merged.columns:
+        merged["prediction_threshold"] = merged["threshold"]
+    if "prediction_model" not in merged.columns and "model_name" in merged.columns:
+        merged["prediction_model"] = merged["model_name"]
+    return merged
+
+
 def cohort_summary(module: str, presentation: str, quarter: str) -> pd.DataFrame:
     summary = load_recommendation_summary(quarter)
     if summary.empty:
         return summary
-    return summary[(summary["code_module"].astype(str) == str(module)) & (summary["code_presentation"].astype(str) == str(presentation))].copy()
+    summary = summary[
+        (summary["code_module"].astype(str) == str(module))
+        & (summary["code_presentation"].astype(str) == str(presentation))
+    ].copy()
+    return _attach_prediction_context(summary, quarter)
+
+
+def prediction_overview(
+    quarter: str,
+    module: str | None = None,
+    presentation: str | None = None,
+) -> dict:
+    """Aggregate model coverage/risk for Instructor and Admin dashboard cards."""
+    pred = _prediction_slice(quarter)
+    if module is not None and not pred.empty:
+        pred = pred[pred["code_module"].astype(str).eq(str(module))]
+    if presentation is not None and not pred.empty:
+        pred = pred[pred["code_presentation"].astype(str).eq(str(presentation))]
+
+    summary = load_recommendation_summary(quarter)
+    if module is not None and not summary.empty:
+        summary = summary[summary["code_module"].astype(str).eq(str(module))]
+    if presentation is not None and not summary.empty:
+        summary = summary[summary["code_presentation"].astype(str).eq(str(presentation))]
+
+    denominator = int(len(summary)) if not summary.empty else int(len(pred))
+    n_predictions = int(len(pred))
+    if pred.empty:
+        return {
+            "n_students": denominator,
+            "n_predictions": 0,
+            "prediction_coverage_pct": 0.0,
+            "n_model_flagged": 0,
+            "pct_model_flagged": None,
+            "mean_risk_probability": None,
+        }
+
+    classes = pd.to_numeric(pred["predicted_class"], errors="coerce")
+    probs = pd.to_numeric(pred["risk_probability"], errors="coerce")
+    return {
+        "n_students": denominator,
+        "n_predictions": n_predictions,
+        "prediction_coverage_pct": round(100 * n_predictions / max(denominator, 1), 1),
+        "n_model_flagged": int(classes.eq(1).sum()),
+        "pct_model_flagged": round(100 * float(classes.eq(1).mean()), 1),
+        "mean_risk_probability": round(float(probs.mean()), 4) if probs.notna().any() else None,
+    }
 
 
 def cohort_details(module: str, presentation: str, quarter: str) -> pd.DataFrame:
@@ -433,6 +668,7 @@ def cohort_details(module: str, presentation: str, quarter: str) -> pd.DataFrame
 
 
 def cohort_priority_table(module: str, presentation: str, quarter: str) -> pd.DataFrame:
+    """Instructor queue: prediction prioritises review; behaviour defines support."""
     summary = cohort_summary(module, presentation, quarter)
     if summary.empty:
         return summary
@@ -440,28 +676,68 @@ def cohort_priority_table(module: str, presentation: str, quarter: str) -> pd.Da
     mapping = build_student_display_map(load_student_info()["id_student"])
     out = summary.copy()
     out["Learner"] = pd.to_numeric(out["id_student"], errors="coerce").map(mapping)
+
     if not details.empty:
         ranked = details.sort_values([c for c in ["id_student", "priority"] if c in details.columns])
-        top1 = ranked.groupby("id_student").nth(0).reset_index()[["id_student", "issue_label"]].rename(columns={"issue_label": "Main opportunity"})
-        top2 = ranked.groupby("id_student").nth(1).reset_index()[["id_student", "issue_label"]].rename(columns={"issue_label": "Second opportunity"})
+        top1 = (
+            ranked.groupby("id_student").nth(0).reset_index()[["id_student", "issue_label"]]
+            .rename(columns={"issue_label": "Main opportunity"})
+        )
+        top2 = (
+            ranked.groupby("id_student").nth(1).reset_index()[["id_student", "issue_label"]]
+            .rename(columns={"issue_label": "Second opportunity"})
+        )
         out = out.merge(top1, on="id_student", how="left").merge(top2, on="id_student", how="left")
-    pred = load_prediction_data()
-    if not pred.empty and {"code_module", "code_presentation"}.issubset(pred.columns):
-        p = pred[(pred["code_module"].astype(str) == str(module)) & (pred["code_presentation"].astype(str) == str(presentation))].copy()
-        if "quarter" in p.columns:
-            p = p[p["quarter"].astype(str).str.upper() == quarter.upper()]
-        prob_col = _first_present(p.columns, ["risk_probability", "probability", "predicted_probability", "risk_score"])
-        if prob_col:
-            p = p[["id_student", prob_col]].rename(columns={prob_col: "Model probability"})
-            out = out.merge(p, on="id_student", how="left")
+
+    if "risk_probability" in out.columns:
+        out["Model probability"] = pd.to_numeric(out["risk_probability"], errors="coerce")
+    if "predicted_class" in out.columns:
+        cls = pd.to_numeric(out["predicted_class"], errors="coerce")
+        out["Model flag"] = np.where(
+            cls.eq(1), "Flagged",
+            np.where(cls.eq(0), "Not Flagged", "Unavailable"),
+        )
+    if "prediction_status" in out.columns:
+        out["Prediction status"] = out["prediction_status"]
+
+    # Transparent operational ordering:
+    # 1) model flag, 2) model probability, 3) behavioural intervention intensity,
+    # 4) behavioural gap severity.  None of these fields rewrites the recommendation.
+    out["_model_flag_rank"] = pd.to_numeric(out.get("predicted_class"), errors="coerce").fillna(-1)
+    out["_model_probability_rank"] = pd.to_numeric(out.get("risk_probability"), errors="coerce").fillna(-1)
+    intervention_rank = {
+        "Instructor Follow-up": 4,
+        "Targeted Support": 3,
+        "Self-Guided Support": 2,
+        "No Additional Action": 1,
+    }
+    out["_intervention_rank"] = out.get(
+        "intervention_level", pd.Series(index=out.index, dtype=object)
+    ).map(intervention_rank).fillna(0)
+    out["_severity_rank"] = pd.to_numeric(out.get("max_gap_severity"), errors="coerce").fillna(0)
+    out = out.sort_values(
+        ["_model_flag_rank", "_model_probability_rank", "_intervention_rank", "_severity_rank"],
+        ascending=[False, False, False, False],
+    )
+
     order = [
-        "Learner", "instructor_support_status", "intervention_level", "learning_pattern",
-        "Main opportunity", "Second opportunity", "max_gap_severity", "Model probability", "id_student"
+        "Learner",
+        "Prediction status",
+        "Model flag",
+        "Model probability",
+        "instructor_support_status",
+        "intervention_level",
+        "learning_pattern",
+        "Main opportunity",
+        "Second opportunity",
+        "max_gap_severity",
+        "predicted_class",
+        "risk_probability",
+        "prediction_model",
+        "prediction_threshold",
+        "id_student",
     ]
     cols = [c for c in order if c in out.columns]
-    sort_cols = [c for c in ["Model probability", "intervention_tier", "max_gap_severity"] if c in out.columns]
-    if sort_cols:
-        out = out.sort_values(sort_cols, ascending=False)
     return out[cols]
 
 
@@ -505,6 +781,7 @@ def module_support_summary(quarter: str, modules: list[str] | None = None, prese
         summary = summary[summary["code_presentation"].isin(presentations)]
     if summary.empty:
         return pd.DataFrame()
+    summary = _attach_prediction_context(summary, quarter)
     grouped = summary.groupby("code_module").agg(
         Students=("id_student", "nunique"),
         AvgRecommendations=("n_recs", "mean"),
@@ -513,8 +790,17 @@ def module_support_summary(quarter: str, modules: list[str] | None = None, prese
         Targeted=("intervention_level", lambda s: int((s == "Targeted Support").sum())),
         SelfGuided=("intervention_level", lambda s: int((s == "Self-Guided Support").sum())),
         NoAction=("intervention_level", lambda s: int((s == "No Additional Action").sum())),
+        Predictions=("prediction_available", lambda s: int(pd.Series(s).fillna(False).astype(bool).sum())),
+        ModelFlagged=("predicted_class", lambda s: int(pd.to_numeric(s, errors="coerce").eq(1).sum())),
+        AvgRiskProbability=("risk_probability", lambda s: pd.to_numeric(s, errors="coerce").mean()),
     ).reset_index()
     grouped["Support load %"] = 100 * (grouped["FollowUp"] + grouped["Targeted"]) / grouped["Students"].clip(lower=1)
+    grouped["Prediction coverage %"] = 100 * grouped["Predictions"] / grouped["Students"].clip(lower=1)
+    grouped["Model flagged %"] = np.where(
+        grouped["Predictions"].gt(0),
+        100 * grouped["ModelFlagged"] / grouped["Predictions"],
+        np.nan,
+    )
     return grouped.sort_values(["Support load %", "AvgSeverity"], ascending=False)
 
 

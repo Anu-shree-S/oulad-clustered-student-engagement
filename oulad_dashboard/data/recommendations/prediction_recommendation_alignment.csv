@@ -1,0 +1,6 @@
+quarter,n_students,prediction_coverage_pct,pct_model_flagged,mean_risk_probability,pct_flagged_but_on_track,pct_not_flagged_but_behaviour_support,n_disagreement_cases
+Q1,10365,100.0,54.3,0.5087,16.4,18.3,1790
+Q2,10365,100.0,47.1,0.4762,24.8,15.5,2059
+Q3,10365,100.0,42.7,0.4797,34.1,19.5,2668
+Q4,10365,0.0,,,,,0
+master,10365,100.0,44.3,0.4931,10.2,22.4,1764

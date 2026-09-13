@@ -4,6 +4,7 @@ Instructor-facing design principles:
 - four operational tabs: Class Overview, Support Queue, Assessments, Student Detail;
 - use quarter/checkpoint-safe evidence only (no future-course information);
 - prioritise observable, modifiable learning behaviour over demographic risk labels;
+- use model prediction to prioritise review, never to replace behavioural explanation;
 - use the recommendation pipeline's support level as the operational status;
 - never expose historical final_result in the instructor workflow;
 - preserve human judgement: analytics support an instructor decision, they do not make it.
@@ -29,6 +30,7 @@ from services.learning_service import (
     cohort_summary,
     common_issues,
     prediction_for_student,
+    prediction_overview,
     student_behaviour_tiles,
     student_learning_pattern,
     student_recommendations,
@@ -231,6 +233,48 @@ def _support_card(label: str, value: str, subtitle: str, support_level: str):
         </div>
         """,
         unsafe_allow_html=True,
+    )
+
+
+def _prediction_context_cards(pred: dict, *, compact: bool = False):
+    """Render model output as review context, separate from behavioural support status."""
+    probability = _safe_number(pred.get("risk_probability", pred.get("probability"))) if pred else None
+    threshold = _safe_number(pred.get("threshold")) if pred else None
+    predicted_class = pred.get("predicted_class") if pred else None
+
+    if probability is None:
+        st.info(
+            "No separate model prediction is available for this checkpoint. "
+            "Behavioural support indicators and recommendations remain available."
+        )
+        return
+
+    flag = (
+        "Flagged for attention" if predicted_class == 1
+        else "Not flagged" if predicted_class == 0
+        else str(pred.get("prediction_status") or "Available")
+    )
+    model_name = str(pred.get("model_name") or "Model not supplied")
+
+    if compact:
+        c1, c2 = st.columns(2)
+        with c1:
+            _metric_card("Model Risk Estimate", f"{probability:.1%}", "Early-warning estimate at this checkpoint")
+        with c2:
+            _metric_card("Prediction Flag", flag, "Used to prioritise review, not determine support")
+    else:
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            _metric_card("Model Risk Estimate", f"{probability:.1%}", "Early-warning estimate at this checkpoint")
+        with c2:
+            _metric_card("Prediction Flag", flag, "Review signal; not an academic decision")
+        with c3:
+            threshold_text = f"{threshold:.1%}" if threshold is not None else "—"
+            _metric_card("Model Threshold", threshold_text, model_name)
+
+    st.caption(
+        "Prediction helps prioritise which learner to review first. The behavioural support status and recommendations "
+        "are generated separately from modifiable learning-behaviour gaps."
     )
 
 
@@ -715,6 +759,35 @@ def _enrich_queue(queue: pd.DataFrame, raw_metrics: pd.DataFrame) -> pd.DataFram
     return out
 
 
+def _sort_combined_priority(frame: pd.DataFrame) -> pd.DataFrame:
+    """Prediction prioritises review; behavioural support remains an independent status."""
+    if frame is None or frame.empty:
+        return pd.DataFrame() if frame is None else frame
+
+    out = frame.copy()
+    if "predicted_class" in out.columns:
+        out["_pred_flag"] = pd.to_numeric(out["predicted_class"], errors="coerce").fillna(-1)
+    elif "Model flag" in out.columns:
+        out["_pred_flag"] = out["Model flag"].map({"Flagged": 1, "Not Flagged": 0}).fillna(-1)
+    else:
+        out["_pred_flag"] = -1
+
+    if "Model probability" in out.columns:
+        out["_pred_prob"] = pd.to_numeric(out["Model probability"], errors="coerce").fillna(-1)
+    elif "risk_probability" in out.columns:
+        out["_pred_prob"] = pd.to_numeric(out["risk_probability"], errors="coerce").fillna(-1)
+    else:
+        out["_pred_prob"] = -1
+
+    out["_support_rank"] = pd.to_numeric(out.get("Support Rank"), errors="coerce").fillna(1)
+    out["_gap_rank"] = pd.to_numeric(out.get("max_gap_severity"), errors="coerce").fillna(-1)
+
+    return out.sort_values(
+        ["_pred_flag", "_pred_prob", "_support_rank", "_gap_rank"],
+        ascending=[False, False, True, False],
+    )
+
+
 def _queue_table(enriched: pd.DataFrame, *, compact: bool = False):
     if enriched.empty:
         render_empty_state(
@@ -725,6 +798,25 @@ def _queue_table(enriched: pd.DataFrame, *, compact: bool = False):
 
     display = pd.DataFrame()
     display["Student ID"] = enriched["id_student"].astype(int)
+
+    flag_col = None
+    if "Model flag" in enriched.columns:
+        flag_col = "Model flag"
+    elif "predicted_class" in enriched.columns:
+        classes = pd.to_numeric(enriched["predicted_class"], errors="coerce")
+        display["Model Flag"] = classes.map({1: "Flagged", 0: "Not Flagged"}).fillna("—")
+
+    if flag_col:
+        display["Model Flag"] = enriched[flag_col].fillna("—").astype(str)
+
+    probability_col = "Model probability" if "Model probability" in enriched.columns else (
+        "risk_probability" if "risk_probability" in enriched.columns else None
+    )
+    if probability_col:
+        probs = pd.to_numeric(enriched[probability_col], errors="coerce")
+        if probs.notna().any():
+            display["Model Risk"] = probs.map(lambda x: f"{x:.1%}" if pd.notna(x) else "—")
+
     display["Support Status"] = enriched["Support Status"]
     display["Main Behavioural Opportunity"] = enriched.apply(
         lambda r: _first_existing(r, ["Main opportunity", "main_opportunity", "primary_opportunity", "top_opportunity"], "—"), axis=1
@@ -1404,6 +1496,7 @@ def render_instructor_dashboard(user):
     summary = cohort_summary(module, presentation, quarter)
     queue = cohort_priority_table(module, presentation, quarter)
     issues = common_issues(module, presentation, quarter)
+    pred_overview = prediction_overview(quarter, module=module, presentation=presentation)
     weekly, weekly_stats = _class_weekly_metrics(raw, module, presentation, start_week, end_week)
     assessment_metrics, score_distribution, assessment_stats = _assessment_checkpoint(raw, module, presentation, end_week)
     learner_metrics = _student_quarter_metrics(raw, module, presentation, start_week, end_week, assessment_metrics)
@@ -1424,7 +1517,9 @@ def render_instructor_dashboard(user):
     # ------------------------------------------------------------------
     with tabs[0]:
         st.subheader("Class Overview")
-        st.caption("A concise checkpoint view of support demand, engagement, consistency and assessment participation.")
+        st.caption(
+            "A concise checkpoint view of behavioural support demand and learning activity, with model prediction shown as a separate review-prioritisation signal."
+        )
 
         total = int(cohort["id_student"].nunique()) if not cohort.empty else (
             int(summary["id_student"].nunique()) if isinstance(summary, pd.DataFrame) and not summary.empty and "id_student" in summary.columns else 0
@@ -1457,6 +1552,29 @@ def render_instructor_dashboard(user):
             _support_card("Needs Attention", str(counts["Needs Attention"]), "Timely behavioural support", "Needs Attention")
         with c4:
             _support_card("Priority Support", str(counts["Priority Support"]), "Prioritise instructor follow-up", "Priority Support")
+
+        if analytics.get("predictions", False):
+            st.markdown("#### Prediction context")
+            p1, p2, p3, p4 = st.columns(4)
+            coverage = pred_overview.get("prediction_coverage_pct")
+            flagged = pred_overview.get("n_model_flagged")
+            flagged_pct = pred_overview.get("pct_model_flagged")
+            mean_risk = pred_overview.get("mean_risk_probability")
+            with p1:
+                _metric_card("Prediction Coverage", f"{coverage:.0f}%" if coverage is not None else "—", "Learners with a checkpoint model output")
+            with p2:
+                _metric_card("Model Flagged", f"{int(flagged):,}" if flagged is not None else "—", "Learners above the model decision threshold")
+            with p3:
+                _metric_card("Flagged Rate", f"{flagged_pct:.1f}%" if flagged_pct is not None else "—", "Prediction signal only; not support status")
+            with p4:
+                _metric_card("Average Model Risk", f"{mean_risk:.1%}" if mean_risk is not None else "—", "Mean estimated risk across available predictions")
+            st.caption(
+                "Model flags help prioritise review. On Track / Needs Attention / Priority Support remain behavioural support classifications from the recommendation layer."
+            )
+        else:
+            st.info(
+                "No separate model prediction is available for this checkpoint. Behavioural support and checkpoint learning evidence remain available."
+            )
 
         c5, c6, c7 = st.columns(3)
         with c5:
@@ -1530,8 +1648,10 @@ def render_instructor_dashboard(user):
                 st.caption("A common issue may indicate a course-level teaching opportunity rather than an individual deficit.")
         with col_first:
             st.markdown("**Attention first**")
-            st.caption("Top learners from the existing behavioural recommendation priority queue.")
-            _queue_table(enriched_queue.sort_values(["Support Rank"], ascending=True) if not enriched_queue.empty else enriched_queue, compact=True)
+            st.caption(
+                "Top learners for review. When model output is available, flagged learners and higher model-risk estimates are reviewed first; behavioural status remains visible alongside that signal."
+            )
+            _queue_table(_sort_combined_priority(enriched_queue), compact=True)
 
     # ------------------------------------------------------------------
     # 2. SUPPORT QUEUE
@@ -1539,8 +1659,8 @@ def render_instructor_dashboard(user):
     with tabs[1]:
         st.subheader("Support Queue")
         st.caption(
-            "The recommendation layer supplies the support status. Checkpoint engagement and assessment metrics add context; "
-            "historical final outcomes are intentionally excluded."
+            "The recommendation layer supplies the behavioural support status. When available, model prediction helps prioritise which learner to review first; "
+            "checkpoint engagement and assessment metrics add context, and historical final outcomes are intentionally excluded."
         )
 
         if enriched_queue.empty:
@@ -1552,7 +1672,7 @@ def render_instructor_dashboard(user):
             ) + "</div>"
             st.markdown(legend_html, unsafe_allow_html=True)
 
-            f1, f2, f3 = st.columns([1.35, 1.1, 1.4])
+            f1, f2, f3, f4 = st.columns([1.35, 1.1, 1.25, 1.45])
             with f1:
                 status_filter = st.multiselect(
                     "Support status",
@@ -1563,17 +1683,45 @@ def render_instructor_dashboard(user):
             with f2:
                 student_search = st.text_input("Student ID", placeholder="Search ID", key="instructor_student_search")
             with f3:
+                available_flags = []
+                if "Model flag" in enriched_queue.columns:
+                    available_flags = [
+                        x for x in ["Flagged", "Not Flagged"]
+                        if enriched_queue["Model flag"].astype(str).eq(x).any()
+                    ]
+                prediction_filter = st.multiselect(
+                    "Prediction flag",
+                    available_flags,
+                    default=available_flags,
+                    disabled=not bool(available_flags),
+                    key="instructor_prediction_filter",
+                )
+            with f4:
                 sort_by = st.selectbox(
                     "Sort",
-                    ["Support priority", "Lowest active weeks", "Lowest engagement", "Most missed assessments"],
+                    [
+                        "Combined review priority",
+                        "Behavioural support priority",
+                        "Highest model risk",
+                        "Lowest active weeks",
+                        "Lowest engagement",
+                        "Most missed assessments",
+                    ],
                     key="instructor_sort",
                 )
 
             view = enriched_queue[enriched_queue["Support Status"].isin(status_filter)].copy()
+            if available_flags and prediction_filter:
+                view = view[view["Model flag"].astype(str).isin(prediction_filter)]
+            elif available_flags and not prediction_filter:
+                view = view.iloc[0:0]
+
             if student_search.strip():
                 view = view[view["id_student"].astype(str).str.contains(student_search.strip(), regex=False)]
 
-            if sort_by == "Support priority":
+            if sort_by == "Combined review priority":
+                view = _sort_combined_priority(view)
+            elif sort_by == "Behavioural support priority":
                 cols = ["Support Rank"]
                 ascending = [True]
                 if "max_gap_severity" in view.columns:
@@ -1581,6 +1729,12 @@ def render_instructor_dashboard(user):
                     cols.append("_gap")
                     ascending.append(False)
                 view = view.sort_values(cols, ascending=ascending)
+            elif sort_by == "Highest model risk":
+                prob_col = "Model probability" if "Model probability" in view.columns else (
+                    "risk_probability" if "risk_probability" in view.columns else None
+                )
+                if prob_col:
+                    view = view.sort_values(prob_col, ascending=False)
             elif sort_by == "Lowest active weeks" and "Active Weeks %" in view.columns:
                 view = view.sort_values("Active Weeks %", ascending=True)
             elif sort_by == "Lowest engagement" and "Engagement vs Class %" in view.columns:
@@ -1594,7 +1748,7 @@ def render_instructor_dashboard(user):
 
             st.info(
                 "Use this queue for prioritisation, then open Student Detail before contacting a learner. "
-                "A support status is a decision-support signal, not an automatic academic decision."
+                "Model risk and behavioural support are complementary decision-support signals; neither is an automatic academic decision."
             )
 
     # ------------------------------------------------------------------
@@ -1734,6 +1888,10 @@ def render_instructor_dashboard(user):
                     _detail_context_card(label, value)
 
         _support_banner(student_id, level, pattern_label, str(opportunity))
+
+        st.markdown("### Model Prediction Context")
+        _prediction_context_cards(pred)
+
         _render_priority_recommendation_block(recs, fallback_issue=str(opportunity))
 
         detail_tabs = st.tabs(["Student Overview", "Assessments", "Recommendations"])
@@ -1878,6 +2036,16 @@ def render_instructor_dashboard(user):
             st.caption(
                 "Recommendations are behavioural decision-support suggestions. Review the learner's context before deciding whether and how to contact them."
             )
+            if pred and pred.get("probability") is not None:
+                st.info(
+                    f"**Model context:** {pred.get('prediction_status') or pred.get('risk_label') or 'Prediction available'} "
+                    f"at **{float(pred['probability']):.1%} model-estimated risk**. "
+                    "The recommendations below are generated from behavioural gaps rather than from this model flag."
+                )
+            elif quarter == "Q4":
+                st.info(
+                    "No separate Q4 model prediction is available. The recommendations below remain based on Q4 behavioural evidence."
+                )
             _recommendation_cards(recs, level)
 
             st.divider()
@@ -1955,7 +2123,7 @@ def render_instructor_dashboard(user):
                     )
                 else:
                     st.write(
-                        "Student-level prediction output is not connected yet. The support profile is currently driven by the behavioural recommendation layer."
+                        "No student-level prediction is available for this checkpoint. The support profile remains driven by the behavioural recommendation layer."
                     )
                 st.write("Historical final_result is deliberately excluded from this operational instructor view.")
                 st.write("Use analytics as decision support and combine them with tutor judgement and learner context before acting.")
