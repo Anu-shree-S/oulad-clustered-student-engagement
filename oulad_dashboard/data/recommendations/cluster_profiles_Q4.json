@@ -1,15 +1,16 @@
 [
   {
     "cluster_id":0,
-    "label":"Mixed Learning Pattern",
-    "summary":"This historical behavioural cluster shows relative strengths in Study Timing.",
+    "label":"Irregular Engagement Pattern",
+    "summary":"This historical behavioural cluster shows more room to build Study Spacing and Study Consistency.",
     "strengths":[
-      "Study Timing"
-    ],
-    "opportunities":[
 
     ],
-    "n_historical_learners":3292
+    "opportunities":[
+      "Study Spacing",
+      "Study Consistency"
+    ],
+    "n_historical_learners":639
   },
   {
     "cluster_id":1,
@@ -21,6 +22,19 @@
     "opportunities":[
 
     ],
-    "n_historical_learners":16258
+    "n_historical_learners":11363
+  },
+  {
+    "cluster_id":2,
+    "label":"Assessment-Focused Learner",
+    "summary":"This historical behavioural cluster shows relative strengths in Study Timing and Practice & Assessments.",
+    "strengths":[
+      "Study Timing",
+      "Practice & Assessments"
+    ],
+    "opportunities":[
+
+    ],
+    "n_historical_learners":2999
   }
 ]

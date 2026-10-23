@@ -1,6 +1,6 @@
 quarter,quarter_label,confidence,n_students,pct_on_track,pct_needs_attention,pct_priority_support,pct_urgent,pct_with_recs,pct_zero_recs,avg_recs,avg_categories,pct_instructor_followup,peer_fallback_rate,prediction_coverage_pct,pct_model_flagged,mean_risk_probability,top_issue
-Q1,Early Stage (Q1),low,10365,46.2,14.6,39.2,39.2,71.9,28.1,1.4567,1.2004,0.0,0.0,100.0,54.3,0.5087,Study consistency opportunity
-Q2,Main Checkpoint (Q2),medium,10365,56.4,10.0,33.6,33.6,58.4,41.6,1.0516,0.9517,0.0,0.0,100.0,47.1,0.4762,Study consistency opportunity
-Q3,Refinement Stage (Q3),high,10365,60.6,15.1,24.3,24.3,54.8,45.2,0.9013,0.8446,21.7,5.3,100.0,42.7,0.4797,Study consistency opportunity
-Q4,Late Stage (Q4),high,10365,54.0,9.7,36.3,36.3,57.8,42.2,0.9707,0.9589,25.9,0.0,0.0,,,Study consistency opportunity
-master,Full Course View,high,10365,47.7,11.2,41.1,41.1,68.2,31.8,1.4024,1.1068,39.5,8.4,100.0,44.3,0.4931,Study consistency opportunity
+Q1,Early Stage (Q1),low,8703,53.2,10.6,36.1,36.1,62.1,37.9,0.9985,0.8843,0.0,0.0,100.0,46.1,0.4301,Study consistency opportunity
+Q2,Main Checkpoint (Q2),medium,8121,58.4,16.4,25.2,25.2,60.2,39.8,1.0032,0.8696,0.0,0.0,100.0,32.9,0.3442,Study consistency opportunity
+Q3,Refinement Stage (Q3),high,7623,59.7,12.3,28.0,28.0,61.3,38.7,1.0531,0.9073,25.6,0.0,100.0,23.4,0.309,Study consistency opportunity
+Q4,Late Stage (Q4),high,7521,61.4,13.1,25.5,25.5,60.1,39.9,1.063,0.8883,24.9,3.1,0.0,,,Study consistency opportunity
+master,Full Course View,high,7521,61.4,13.1,25.5,25.5,60.1,39.9,1.063,0.8883,24.9,3.1,100.0,23.8,0.309,Study consistency opportunity

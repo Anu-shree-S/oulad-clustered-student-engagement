@@ -1,0 +1,5 @@
+quarter,total_students,enrolled_students,already_withdrawn,at_risk_already_withdrawn,total_at_risk,at_risk_already_withdrawn_pct,total_alerts,alerts_to_withdrawn,alerts_to_withdrawn_pct
+Q1,11260,8703,2557,2557,5803,44.06,6101,2497,40.93
+Q2,11260,8121,3139,3139,5803,54.09,5435,3087,56.8
+Q3,11260,7623,3637,3637,5803,62.67,6021,3590,59.62
+Master,11260,7521,3739,3739,5803,64.43,5519,3700,67.04

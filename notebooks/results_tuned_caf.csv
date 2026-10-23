@@ -1,0 +1,266 @@
+Window,Model,Threshold,Accuracy,Precision,Recall,F1,ROC-AUC,_model,_X_te,_y_te,_features,_y_prob,Experiment,CV_AUC,Best_Params
+Q1,Logistic Regression_tuned,0.4,0.6977,0.5722,0.7505,0.6493,0.7909,"Pipeline(steps=[('scaler', RobustScaler()),
+                ('clf',
+                 LogisticRegression(C=0.1, class_weight='balanced',
+                                    max_iter=1000, penalty='l2',
+                                    random_state=42, solver='liblinear'))])","[[1 0 2 ... 0.6483214483476729 -0.18901308816274237 0.8115655320630417]
+ [0 0 0 ... -2.1923200788616684 -0.6828364800423935 0.10490041765933801]
+ [0 0 1 ... 0.19093001600069165 -0.5490936216417547 0.45823297486118986]
+ ...
+ [0 1 0 ... 1.7090968245950129 -0.7730655049203897 -1.3084298111480699]
+ [0 0 1 ... 0.6840430203329139 -0.14665056648694708 -0.9550972539462179]
+ [0 0 1 ... -1.175573834039476 0.42806644612290373 0.010706476543878535]]",[0 0 0 ... 0 1 0],"['gender_bin', 'disability_bin', 'age_band_ord', 'age_band_missing_flag', 'highest_education_ord', 'highest_education_missing_flag', 'imd_ordinal', 'imd_unknown_flag', 'nation_England', 'nation_Scotland', 'nation_Wales', 'nation_Northern_Ireland', 'late_registration_flag', 'studied_credits', 'course_type_stem', 'num_of_prev_attempts', 'norm_total_Q1', 'norm_content_Q1', 'norm_assessment_Q1', 'norm_social_Q1', 'content_ratio_Q1', 'assessment_ratio_Q1', 'social_ratio_Q1', 'dim_entropy_norm_Q1', 'AP_Q1', 'AP_Q1_missing', 'n_submissions_Q1', 'num_late_submissions_Q1', 'n_missed_assessments_Q1', 'n_due_assessments_Q1', 'spacing_score_Q1', 'caf_q1_risk_prior', 'caf_q1_z_AP', 'caf_q1_z_total', 'caf_q1_z_active']",[0.08566755 0.60610821 0.16723594 ... 0.35180162 0.28419149 0.20503968],ca_final_tuned,0.7991,"{'clf__C': 0.1, 'clf__penalty': 'l2', 'clf__solver': 'liblinear'}"
+Q1,Random Forest_tuned,0.38,0.6676,0.5362,0.8047,0.6436,0.7936,"Pipeline(steps=[('scaler', RobustScaler()),
+                ('clf',
+                 RandomForestClassifier(class_weight='balanced', max_depth=10,
+                                        n_jobs=-1, random_state=42))])","[[1 0 2 ... 0.6483214483476729 -0.18901308816274237 0.8115655320630417]
+ [0 0 0 ... -2.1923200788616684 -0.6828364800423935 0.10490041765933801]
+ [0 0 1 ... 0.19093001600069165 -0.5490936216417547 0.45823297486118986]
+ ...
+ [0 1 0 ... 1.7090968245950129 -0.7730655049203897 -1.3084298111480699]
+ [0 0 1 ... 0.6840430203329139 -0.14665056648694708 -0.9550972539462179]
+ [0 0 1 ... -1.175573834039476 0.42806644612290373 0.010706476543878535]]",[0 0 0 ... 0 1 0],"['gender_bin', 'disability_bin', 'age_band_ord', 'age_band_missing_flag', 'highest_education_ord', 'highest_education_missing_flag', 'imd_ordinal', 'imd_unknown_flag', 'nation_England', 'nation_Scotland', 'nation_Wales', 'nation_Northern_Ireland', 'late_registration_flag', 'studied_credits', 'course_type_stem', 'num_of_prev_attempts', 'norm_total_Q1', 'norm_content_Q1', 'norm_assessment_Q1', 'norm_social_Q1', 'content_ratio_Q1', 'assessment_ratio_Q1', 'social_ratio_Q1', 'dim_entropy_norm_Q1', 'AP_Q1', 'AP_Q1_missing', 'n_submissions_Q1', 'num_late_submissions_Q1', 'n_missed_assessments_Q1', 'n_due_assessments_Q1', 'spacing_score_Q1', 'caf_q1_risk_prior', 'caf_q1_z_AP', 'caf_q1_z_total', 'caf_q1_z_active']",[0.15256835 0.54358335 0.25296141 ... 0.31784713 0.26675794 0.36238219],ca_final_tuned,0.7986,"{'clf__max_depth': 10, 'clf__max_features': 'sqrt', 'clf__min_samples_split': 2, 'clf__n_estimators': 100}"
+Q1,XGBoost_tuned,0.46,0.7263,0.6169,0.7024,0.6569,0.7989,"Pipeline(steps=[('scaler', RobustScaler()),
+                ('clf',
+                 XGBClassifier(base_score=None, booster=None, callbacks=None,
+                               colsample_bylevel=None, colsample_bynode=None,
+                               colsample_bytree=0.7, device=None,
+                               early_stopping_rounds=None,
+                               enable_categorical=True, eval_metric='auc',
+                               feature_types=None, feature_weights=None,
+                               gamma=None, grow_policy=None,
+                               importance_type=None,
+                               interaction_constraints=None, learning_rate=0.05,
+                               max_bin=None, max_cat_threshold=None,
+                               max_cat_to_onehot=None, max_delta_step=None,
+                               max_depth=3, max_leaves=None,
+                               min_child_weight=None, missing=nan,
+                               monotone_constraints=None, multi_strategy=None,
+                               n_estimators=300, n_jobs=-1,
+                               num_parallel_tree=None, ...))])","[[1 0 2 ... 0.6483214483476729 -0.18901308816274237 0.8115655320630417]
+ [0 0 0 ... -2.1923200788616684 -0.6828364800423935 0.10490041765933801]
+ [0 0 1 ... 0.19093001600069165 -0.5490936216417547 0.45823297486118986]
+ ...
+ [0 1 0 ... 1.7090968245950129 -0.7730655049203897 -1.3084298111480699]
+ [0 0 1 ... 0.6840430203329139 -0.14665056648694708 -0.9550972539462179]
+ [0 0 1 ... -1.175573834039476 0.42806644612290373 0.010706476543878535]]",[0 0 0 ... 0 1 0],"['gender_bin', 'disability_bin', 'age_band_ord', 'age_band_missing_flag', 'highest_education_ord', 'highest_education_missing_flag', 'imd_ordinal', 'imd_unknown_flag', 'nation_England', 'nation_Scotland', 'nation_Wales', 'nation_Northern_Ireland', 'late_registration_flag', 'studied_credits', 'course_type_stem', 'num_of_prev_attempts', 'norm_total_Q1', 'norm_content_Q1', 'norm_assessment_Q1', 'norm_social_Q1', 'content_ratio_Q1', 'assessment_ratio_Q1', 'social_ratio_Q1', 'dim_entropy_norm_Q1', 'AP_Q1', 'AP_Q1_missing', 'n_submissions_Q1', 'num_late_submissions_Q1', 'n_missed_assessments_Q1', 'n_due_assessments_Q1', 'spacing_score_Q1', 'caf_q1_risk_prior', 'caf_q1_z_AP', 'caf_q1_z_total', 'caf_q1_z_active']",[0.07861172 0.5715544  0.13396001 ... 0.22609004 0.22358812 0.24175997],ca_final_tuned,0.8021,"{'clf__colsample_bytree': 0.7, 'clf__learning_rate': 0.05, 'clf__max_depth': 3, 'clf__n_estimators': 300, 'clf__subsample': 0.7}"
+Q1,SVM_tuned,0.32,0.7157,0.5976,0.7283,0.6565,0.7934,"Pipeline(steps=[('scaler', RobustScaler()),
+                ('clf',
+                 SVC(C=1, cache_size=500, class_weight='balanced',
+                     probability=True, random_state=42))])","[[1 0 2 ... 0.6483214483476729 -0.18901308816274237 0.8115655320630417]
+ [0 0 0 ... -2.1923200788616684 -0.6828364800423935 0.10490041765933801]
+ [0 0 1 ... 0.19093001600069165 -0.5490936216417547 0.45823297486118986]
+ ...
+ [0 1 0 ... 1.7090968245950129 -0.7730655049203897 -1.3084298111480699]
+ [0 0 1 ... 0.6840430203329139 -0.14665056648694708 -0.9550972539462179]
+ [0 0 1 ... -1.175573834039476 0.42806644612290373 0.010706476543878535]]",[0 0 0 ... 0 1 0],"['gender_bin', 'disability_bin', 'age_band_ord', 'age_band_missing_flag', 'highest_education_ord', 'highest_education_missing_flag', 'imd_ordinal', 'imd_unknown_flag', 'nation_England', 'nation_Scotland', 'nation_Wales', 'nation_Northern_Ireland', 'late_registration_flag', 'studied_credits', 'course_type_stem', 'num_of_prev_attempts', 'norm_total_Q1', 'norm_content_Q1', 'norm_assessment_Q1', 'norm_social_Q1', 'content_ratio_Q1', 'assessment_ratio_Q1', 'social_ratio_Q1', 'dim_entropy_norm_Q1', 'AP_Q1', 'AP_Q1_missing', 'n_submissions_Q1', 'num_late_submissions_Q1', 'n_missed_assessments_Q1', 'n_due_assessments_Q1', 'spacing_score_Q1', 'caf_q1_risk_prior', 'caf_q1_z_AP', 'caf_q1_z_total', 'caf_q1_z_active']",[0.12849626 0.59903922 0.11607181 ... 0.1917324  0.20339092 0.33874632],ca_final_tuned,0.7987,"{'clf__C': 1, 'clf__gamma': 'scale', 'clf__kernel': 'rbf'}"
+Q1,MLP_tuned,0.36,0.7115,0.5939,0.7163,0.6494,0.7957,"Pipeline(steps=[('scaler', RobustScaler()),
+                ('clf',
+                 MLPClassifier(alpha=0.01, early_stopping=True,
+                               hidden_layer_sizes=(128, 64),
+                               learning_rate_init=0.01, random_state=42))])","[[1 0 2 ... 0.6483214483476729 -0.18901308816274237 0.8115655320630417]
+ [0 0 0 ... -2.1923200788616684 -0.6828364800423935 0.10490041765933801]
+ [0 0 1 ... 0.19093001600069165 -0.5490936216417547 0.45823297486118986]
+ ...
+ [0 1 0 ... 1.7090968245950129 -0.7730655049203897 -1.3084298111480699]
+ [0 0 1 ... 0.6840430203329139 -0.14665056648694708 -0.9550972539462179]
+ [0 0 1 ... -1.175573834039476 0.42806644612290373 0.010706476543878535]]",[0 0 0 ... 0 1 0],"['gender_bin', 'disability_bin', 'age_band_ord', 'age_band_missing_flag', 'highest_education_ord', 'highest_education_missing_flag', 'imd_ordinal', 'imd_unknown_flag', 'nation_England', 'nation_Scotland', 'nation_Wales', 'nation_Northern_Ireland', 'late_registration_flag', 'studied_credits', 'course_type_stem', 'num_of_prev_attempts', 'norm_total_Q1', 'norm_content_Q1', 'norm_assessment_Q1', 'norm_social_Q1', 'content_ratio_Q1', 'assessment_ratio_Q1', 'social_ratio_Q1', 'dim_entropy_norm_Q1', 'AP_Q1', 'AP_Q1_missing', 'n_submissions_Q1', 'num_late_submissions_Q1', 'n_missed_assessments_Q1', 'n_due_assessments_Q1', 'spacing_score_Q1', 'caf_q1_risk_prior', 'caf_q1_z_AP', 'caf_q1_z_total', 'caf_q1_z_active']",[0.03542188 0.38057616 0.06302022 ... 0.23206455 0.19488353 0.18041442],ca_final_tuned,0.8023,"{'clf__alpha': 0.01, 'clf__hidden_layer_sizes': (128, 64), 'clf__learning_rate_init': 0.01, 'clf__max_iter': 200}"
+Q2,Logistic Regression_tuned,0.5,0.7901,0.6846,0.6674,0.6759,0.8373,"Pipeline(steps=[('scaler', RobustScaler()),
+                ('clf',
+                 LogisticRegression(C=100, class_weight='balanced',
+                                    max_iter=1000, penalty='l2',
+                                    random_state=42, solver='liblinear'))])","[[1 0 2 ... 0.5823082703108258 -0.10189697414310278 0.9963915336368173]
+ [0 0 0 ... -1.5662119747317302 -0.7172632004561584 0.6569223169098641]
+ [0 0 1 ... 0.261689101689107 -0.5093428921832622 0.6569223169098641]
+ ...
+ [0 0 1 ... -0.5179634212209016 -0.22081231283919925 -0.5312199416344722]
+ [0 1 0 ... 1.7669788915758395 -0.6234191805049168 -1.040423766724902]
+ [0 0 1 ... -0.8975151181695791 -0.3029830078141209 -0.46218957454758614]]",[0 0 0 ... 0 0 0],"['gender_bin', 'disability_bin', 'age_band_ord', 'age_band_missing_flag', 'highest_education_ord', 'highest_education_missing_flag', 'imd_ordinal', 'imd_unknown_flag', 'nation_England', 'nation_Scotland', 'nation_Wales', 'nation_Northern_Ireland', 'late_registration_flag', 'studied_credits', 'course_type_stem', 'num_of_prev_attempts', 'norm_total_Q2', 'norm_assessment_Q2', 'norm_social_Q2', 'content_ratio_Q2', 'assessment_ratio_Q2', 'social_ratio_Q2', 'dim_entropy_norm_Q2', 'AP_Q2', 'AP_Q2_missing', 'n_submissions_Q2', 'num_late_submissions_Q2', 'n_missed_assessments_Q2', 'n_due_assessments_Q2', 'spacing_score_Q2', 'spacing_defined_Q2', 'active_weeks_ratio_Q2', 'caf_q2_risk_prior', 'caf_q2_z_AP', 'caf_q2_z_total', 'caf_q2_z_active']",[0.03927632 0.33213793 0.08492842 ... 0.34550315 0.3106626  0.21369641],ca_final_tuned,0.8638,"{'clf__C': 100, 'clf__penalty': 'l2', 'clf__solver': 'liblinear'}"
+Q2,Random Forest_tuned,0.48,0.7961,0.7112,0.637,0.6721,0.8479,"Pipeline(steps=[('scaler', RobustScaler()),
+                ('clf',
+                 RandomForestClassifier(class_weight='balanced', max_depth=10,
+                                        n_estimators=300, n_jobs=-1,
+                                        random_state=42))])","[[1 0 2 ... 0.5823082703108258 -0.10189697414310278 0.9963915336368173]
+ [0 0 0 ... -1.5662119747317302 -0.7172632004561584 0.6569223169098641]
+ [0 0 1 ... 0.261689101689107 -0.5093428921832622 0.6569223169098641]
+ ...
+ [0 0 1 ... -0.5179634212209016 -0.22081231283919925 -0.5312199416344722]
+ [0 1 0 ... 1.7669788915758395 -0.6234191805049168 -1.040423766724902]
+ [0 0 1 ... -0.8975151181695791 -0.3029830078141209 -0.46218957454758614]]",[0 0 0 ... 0 0 0],"['gender_bin', 'disability_bin', 'age_band_ord', 'age_band_missing_flag', 'highest_education_ord', 'highest_education_missing_flag', 'imd_ordinal', 'imd_unknown_flag', 'nation_England', 'nation_Scotland', 'nation_Wales', 'nation_Northern_Ireland', 'late_registration_flag', 'studied_credits', 'course_type_stem', 'num_of_prev_attempts', 'norm_total_Q2', 'norm_assessment_Q2', 'norm_social_Q2', 'content_ratio_Q2', 'assessment_ratio_Q2', 'social_ratio_Q2', 'dim_entropy_norm_Q2', 'AP_Q2', 'AP_Q2_missing', 'n_submissions_Q2', 'num_late_submissions_Q2', 'n_missed_assessments_Q2', 'n_due_assessments_Q2', 'spacing_score_Q2', 'spacing_defined_Q2', 'active_weeks_ratio_Q2', 'caf_q2_risk_prior', 'caf_q2_z_AP', 'caf_q2_z_total', 'caf_q2_z_active']",[0.08772114 0.30497047 0.15751138 ... 0.30785212 0.19966875 0.23062251],ca_final_tuned,0.8576,"{'clf__max_depth': 10, 'clf__max_features': 'sqrt', 'clf__min_samples_split': 2, 'clf__n_estimators': 300}"
+Q2,XGBoost_tuned,0.64,0.8088,0.7732,0.5901,0.6694,0.847,"Pipeline(steps=[('scaler', RobustScaler()),
+                ('clf',
+                 XGBClassifier(base_score=None, booster=None, callbacks=None,
+                               colsample_bylevel=None, colsample_bynode=None,
+                               colsample_bytree=0.7, device=None,
+                               early_stopping_rounds=None,
+                               enable_categorical=True, eval_metric='auc',
+                               feature_types=None, feature_weights=None,
+                               gamma=None, grow_policy=None,
+                               importance_type=None,
+                               interaction_constraints=None, learning_rate=0.05,
+                               max_bin=None, max_cat_threshold=None,
+                               max_cat_to_onehot=None, max_delta_step=None,
+                               max_depth=3, max_leaves=None,
+                               min_child_weight=None, missing=nan,
+                               monotone_constraints=None, multi_strategy=None,
+                               n_estimators=300, n_jobs=-1,
+                               num_parallel_tree=None, ...))])","[[1 0 2 ... 0.5823082703108258 -0.10189697414310278 0.9963915336368173]
+ [0 0 0 ... -1.5662119747317302 -0.7172632004561584 0.6569223169098641]
+ [0 0 1 ... 0.261689101689107 -0.5093428921832622 0.6569223169098641]
+ ...
+ [0 0 1 ... -0.5179634212209016 -0.22081231283919925 -0.5312199416344722]
+ [0 1 0 ... 1.7669788915758395 -0.6234191805049168 -1.040423766724902]
+ [0 0 1 ... -0.8975151181695791 -0.3029830078141209 -0.46218957454758614]]",[0 0 0 ... 0 0 0],"['gender_bin', 'disability_bin', 'age_band_ord', 'age_band_missing_flag', 'highest_education_ord', 'highest_education_missing_flag', 'imd_ordinal', 'imd_unknown_flag', 'nation_England', 'nation_Scotland', 'nation_Wales', 'nation_Northern_Ireland', 'late_registration_flag', 'studied_credits', 'course_type_stem', 'num_of_prev_attempts', 'norm_total_Q2', 'norm_assessment_Q2', 'norm_social_Q2', 'content_ratio_Q2', 'assessment_ratio_Q2', 'social_ratio_Q2', 'dim_entropy_norm_Q2', 'AP_Q2', 'AP_Q2_missing', 'n_submissions_Q2', 'num_late_submissions_Q2', 'n_missed_assessments_Q2', 'n_due_assessments_Q2', 'spacing_score_Q2', 'spacing_defined_Q2', 'active_weeks_ratio_Q2', 'caf_q2_risk_prior', 'caf_q2_z_AP', 'caf_q2_z_total', 'caf_q2_z_active']",[0.06408532 0.4683151  0.16550988 ... 0.38769758 0.2021821  0.18703982],ca_final_tuned,0.8629,"{'clf__colsample_bytree': 0.7, 'clf__learning_rate': 0.05, 'clf__max_depth': 3, 'clf__n_estimators': 300, 'clf__subsample': 0.7}"
+Q2,SVM_tuned,0.38,0.7934,0.6996,0.6486,0.6732,0.8319,"Pipeline(steps=[('scaler', RobustScaler()),
+                ('clf',
+                 SVC(C=0.1, cache_size=500, class_weight='balanced',
+                     probability=True, random_state=42))])","[[1 0 2 ... 0.5823082703108258 -0.10189697414310278 0.9963915336368173]
+ [0 0 0 ... -1.5662119747317302 -0.7172632004561584 0.6569223169098641]
+ [0 0 1 ... 0.261689101689107 -0.5093428921832622 0.6569223169098641]
+ ...
+ [0 0 1 ... -0.5179634212209016 -0.22081231283919925 -0.5312199416344722]
+ [0 1 0 ... 1.7669788915758395 -0.6234191805049168 -1.040423766724902]
+ [0 0 1 ... -0.8975151181695791 -0.3029830078141209 -0.46218957454758614]]",[0 0 0 ... 0 0 0],"['gender_bin', 'disability_bin', 'age_band_ord', 'age_band_missing_flag', 'highest_education_ord', 'highest_education_missing_flag', 'imd_ordinal', 'imd_unknown_flag', 'nation_England', 'nation_Scotland', 'nation_Wales', 'nation_Northern_Ireland', 'late_registration_flag', 'studied_credits', 'course_type_stem', 'num_of_prev_attempts', 'norm_total_Q2', 'norm_assessment_Q2', 'norm_social_Q2', 'content_ratio_Q2', 'assessment_ratio_Q2', 'social_ratio_Q2', 'dim_entropy_norm_Q2', 'AP_Q2', 'AP_Q2_missing', 'n_submissions_Q2', 'num_late_submissions_Q2', 'n_missed_assessments_Q2', 'n_due_assessments_Q2', 'spacing_score_Q2', 'spacing_defined_Q2', 'active_weeks_ratio_Q2', 'caf_q2_risk_prior', 'caf_q2_z_AP', 'caf_q2_z_total', 'caf_q2_z_active']",[0.08829358 0.38932504 0.0709185  ... 0.33950885 0.13926043 0.16809678],ca_final_tuned,0.8417,"{'clf__C': 0.1, 'clf__gamma': 'scale', 'clf__kernel': 'rbf'}"
+Q2,MLP_tuned,0.5,0.8051,0.7696,0.5792,0.661,0.8439,"Pipeline(steps=[('scaler', RobustScaler()),
+                ('clf',
+                 MLPClassifier(alpha=0.001, early_stopping=True,
+                               hidden_layer_sizes=(128, 64),
+                               random_state=42))])","[[1 0 2 ... 0.5823082703108258 -0.10189697414310278 0.9963915336368173]
+ [0 0 0 ... -1.5662119747317302 -0.7172632004561584 0.6569223169098641]
+ [0 0 1 ... 0.261689101689107 -0.5093428921832622 0.6569223169098641]
+ ...
+ [0 0 1 ... -0.5179634212209016 -0.22081231283919925 -0.5312199416344722]
+ [0 1 0 ... 1.7669788915758395 -0.6234191805049168 -1.040423766724902]
+ [0 0 1 ... -0.8975151181695791 -0.3029830078141209 -0.46218957454758614]]",[0 0 0 ... 0 0 0],"['gender_bin', 'disability_bin', 'age_band_ord', 'age_band_missing_flag', 'highest_education_ord', 'highest_education_missing_flag', 'imd_ordinal', 'imd_unknown_flag', 'nation_England', 'nation_Scotland', 'nation_Wales', 'nation_Northern_Ireland', 'late_registration_flag', 'studied_credits', 'course_type_stem', 'num_of_prev_attempts', 'norm_total_Q2', 'norm_assessment_Q2', 'norm_social_Q2', 'content_ratio_Q2', 'assessment_ratio_Q2', 'social_ratio_Q2', 'dim_entropy_norm_Q2', 'AP_Q2', 'AP_Q2_missing', 'n_submissions_Q2', 'num_late_submissions_Q2', 'n_missed_assessments_Q2', 'n_due_assessments_Q2', 'spacing_score_Q2', 'spacing_defined_Q2', 'active_weeks_ratio_Q2', 'caf_q2_risk_prior', 'caf_q2_z_AP', 'caf_q2_z_total', 'caf_q2_z_active']",[0.03864366 0.3118693  0.10043742 ... 0.31763036 0.21625378 0.11837799],ca_final_tuned,0.8602,"{'clf__alpha': 0.001, 'clf__hidden_layer_sizes': (128, 64), 'clf__learning_rate_init': 0.001, 'clf__max_iter': 200}"
+Q3,Logistic Regression_tuned,0.52,0.8388,0.7096,0.7322,0.7207,0.8899,"Pipeline(steps=[('scaler', RobustScaler()),
+                ('clf',
+                 LogisticRegression(C=10, class_weight='balanced',
+                                    max_iter=1000, penalty='l2',
+                                    random_state=42, solver='liblinear'))])","[[1 0 2 ... 0.7489835186220027 -0.2437603488358554 0.9753969756391936]
+ [0 0 0 ... -2.7894481171627468 -0.7462359408147 0.5406944001855012]
+ [0 0 1 ... 0.28512690440245625 -0.6298645620609679 0.7580456879123474]
+ ...
+ [0 0 1 ... -0.8793075275210709 0.2545230914818251 -0.0026838191316147075]
+ [0 1 0 ... 2.061048287144447 -0.590493131923573 -0.5460620384487302]
+ [0 0 1 ... 3.0 -0.31471299637878436 -0.4373863945853071]]",[0 0 0 ... 0 0 0],"['gender_bin', 'disability_bin', 'age_band_ord', 'age_band_missing_flag', 'highest_education_ord', 'highest_education_missing_flag', 'imd_ordinal', 'imd_unknown_flag', 'nation_England', 'nation_Scotland', 'nation_Wales', 'nation_Northern_Ireland', 'late_registration_flag', 'studied_credits', 'course_type_stem', 'num_of_prev_attempts', 'norm_total_Q3', 'norm_assessment_Q3', 'norm_social_Q3', 'content_ratio_Q3', 'assessment_ratio_Q3', 'social_ratio_Q3', 'dim_entropy_norm_Q3', 'AP_Q3', 'AP_Q3_missing', 'n_submissions_Q3', 'num_late_submissions_Q3', 'n_missed_assessments_Q3', 'n_due_assessments_Q3', 'spacing_score_Q3', 'spacing_defined_Q3', 'active_weeks_ratio_Q3', 'caf_q3_risk_prior', 'caf_q3_z_AP', 'caf_q3_z_total', 'caf_q3_z_active']",[0.02855257 0.31588457 0.07555902 ... 0.21951911 0.21528059 0.10890072],ca_final_tuned,0.9052,"{'clf__C': 10, 'clf__penalty': 'l2', 'clf__solver': 'liblinear'}"
+Q3,Random Forest_tuned,0.48,0.8515,0.7471,0.7216,0.7341,0.8986,"Pipeline(steps=[('scaler', RobustScaler()),
+                ('clf',
+                 RandomForestClassifier(class_weight='balanced', max_depth=10,
+                                        n_estimators=500, n_jobs=-1,
+                                        random_state=42))])","[[1 0 2 ... 0.7489835186220027 -0.2437603488358554 0.9753969756391936]
+ [0 0 0 ... -2.7894481171627468 -0.7462359408147 0.5406944001855012]
+ [0 0 1 ... 0.28512690440245625 -0.6298645620609679 0.7580456879123474]
+ ...
+ [0 0 1 ... -0.8793075275210709 0.2545230914818251 -0.0026838191316147075]
+ [0 1 0 ... 2.061048287144447 -0.590493131923573 -0.5460620384487302]
+ [0 0 1 ... 3.0 -0.31471299637878436 -0.4373863945853071]]",[0 0 0 ... 0 0 0],"['gender_bin', 'disability_bin', 'age_band_ord', 'age_band_missing_flag', 'highest_education_ord', 'highest_education_missing_flag', 'imd_ordinal', 'imd_unknown_flag', 'nation_England', 'nation_Scotland', 'nation_Wales', 'nation_Northern_Ireland', 'late_registration_flag', 'studied_credits', 'course_type_stem', 'num_of_prev_attempts', 'norm_total_Q3', 'norm_assessment_Q3', 'norm_social_Q3', 'content_ratio_Q3', 'assessment_ratio_Q3', 'social_ratio_Q3', 'dim_entropy_norm_Q3', 'AP_Q3', 'AP_Q3_missing', 'n_submissions_Q3', 'num_late_submissions_Q3', 'n_missed_assessments_Q3', 'n_due_assessments_Q3', 'spacing_score_Q3', 'spacing_defined_Q3', 'active_weeks_ratio_Q3', 'caf_q3_risk_prior', 'caf_q3_z_AP', 'caf_q3_z_total', 'caf_q3_z_active']",[0.07753975 0.16531155 0.11436539 ... 0.19885033 0.18186385 0.14501732],ca_final_tuned,0.9093,"{'clf__max_depth': 10, 'clf__max_features': 'sqrt', 'clf__min_samples_split': 2, 'clf__n_estimators': 500}"
+Q3,XGBoost_tuned,0.48,0.8367,0.6928,0.7641,0.7267,0.9003,"Pipeline(steps=[('scaler', RobustScaler()),
+                ('clf',
+                 XGBClassifier(base_score=None, booster=None, callbacks=None,
+                               colsample_bylevel=None, colsample_bynode=None,
+                               colsample_bytree=0.7, device=None,
+                               early_stopping_rounds=None,
+                               enable_categorical=True, eval_metric='auc',
+                               feature_types=None, feature_weights=None,
+                               gamma=None, grow_policy=None,
+                               importance_type=None,
+                               interaction_constraints=None, learning_rate=0.01,
+                               max_bin=None, max_cat_threshold=None,
+                               max_cat_to_onehot=None, max_delta_step=None,
+                               max_depth=5, max_leaves=None,
+                               min_child_weight=None, missing=nan,
+                               monotone_constraints=None, multi_strategy=None,
+                               n_estimators=500, n_jobs=-1,
+                               num_parallel_tree=None, ...))])","[[1 0 2 ... 0.7489835186220027 -0.2437603488358554 0.9753969756391936]
+ [0 0 0 ... -2.7894481171627468 -0.7462359408147 0.5406944001855012]
+ [0 0 1 ... 0.28512690440245625 -0.6298645620609679 0.7580456879123474]
+ ...
+ [0 0 1 ... -0.8793075275210709 0.2545230914818251 -0.0026838191316147075]
+ [0 1 0 ... 2.061048287144447 -0.590493131923573 -0.5460620384487302]
+ [0 0 1 ... 3.0 -0.31471299637878436 -0.4373863945853071]]",[0 0 0 ... 0 0 0],"['gender_bin', 'disability_bin', 'age_band_ord', 'age_band_missing_flag', 'highest_education_ord', 'highest_education_missing_flag', 'imd_ordinal', 'imd_unknown_flag', 'nation_England', 'nation_Scotland', 'nation_Wales', 'nation_Northern_Ireland', 'late_registration_flag', 'studied_credits', 'course_type_stem', 'num_of_prev_attempts', 'norm_total_Q3', 'norm_assessment_Q3', 'norm_social_Q3', 'content_ratio_Q3', 'assessment_ratio_Q3', 'social_ratio_Q3', 'dim_entropy_norm_Q3', 'AP_Q3', 'AP_Q3_missing', 'n_submissions_Q3', 'num_late_submissions_Q3', 'n_missed_assessments_Q3', 'n_due_assessments_Q3', 'spacing_score_Q3', 'spacing_defined_Q3', 'active_weeks_ratio_Q3', 'caf_q3_risk_prior', 'caf_q3_z_AP', 'caf_q3_z_total', 'caf_q3_z_active']",[0.04736281 0.23740678 0.09924713 ... 0.20780164 0.1703413  0.13443044],ca_final_tuned,0.9107,"{'clf__colsample_bytree': 0.7, 'clf__learning_rate': 0.01, 'clf__max_depth': 5, 'clf__n_estimators': 500, 'clf__subsample': 0.7}"
+Q3,SVM_tuned,0.38,0.8373,0.7049,0.7355,0.7198,0.8859,"Pipeline(steps=[('scaler', RobustScaler()),
+                ('clf',
+                 SVC(C=0.1, cache_size=500, class_weight='balanced',
+                     probability=True, random_state=42))])","[[1 0 2 ... 0.7489835186220027 -0.2437603488358554 0.9753969756391936]
+ [0 0 0 ... -2.7894481171627468 -0.7462359408147 0.5406944001855012]
+ [0 0 1 ... 0.28512690440245625 -0.6298645620609679 0.7580456879123474]
+ ...
+ [0 0 1 ... -0.8793075275210709 0.2545230914818251 -0.0026838191316147075]
+ [0 1 0 ... 2.061048287144447 -0.590493131923573 -0.5460620384487302]
+ [0 0 1 ... 3.0 -0.31471299637878436 -0.4373863945853071]]",[0 0 0 ... 0 0 0],"['gender_bin', 'disability_bin', 'age_band_ord', 'age_band_missing_flag', 'highest_education_ord', 'highest_education_missing_flag', 'imd_ordinal', 'imd_unknown_flag', 'nation_England', 'nation_Scotland', 'nation_Wales', 'nation_Northern_Ireland', 'late_registration_flag', 'studied_credits', 'course_type_stem', 'num_of_prev_attempts', 'norm_total_Q3', 'norm_assessment_Q3', 'norm_social_Q3', 'content_ratio_Q3', 'assessment_ratio_Q3', 'social_ratio_Q3', 'dim_entropy_norm_Q3', 'AP_Q3', 'AP_Q3_missing', 'n_submissions_Q3', 'num_late_submissions_Q3', 'n_missed_assessments_Q3', 'n_due_assessments_Q3', 'spacing_score_Q3', 'spacing_defined_Q3', 'active_weeks_ratio_Q3', 'caf_q3_risk_prior', 'caf_q3_z_AP', 'caf_q3_z_total', 'caf_q3_z_active']",[0.05130593 0.21398592 0.0590025  ... 0.10122206 0.11360151 0.11366595],ca_final_tuned,0.8931,"{'clf__C': 0.1, 'clf__gamma': 'scale', 'clf__kernel': 'rbf'}"
+Q3,MLP_tuned,0.36,0.8322,0.6824,0.7659,0.7218,0.8937,"Pipeline(steps=[('scaler', RobustScaler()),
+                ('clf',
+                 MLPClassifier(early_stopping=True, hidden_layer_sizes=(64, 32),
+                               random_state=42))])","[[1 0 2 ... 0.7489835186220027 -0.2437603488358554 0.9753969756391936]
+ [0 0 0 ... -2.7894481171627468 -0.7462359408147 0.5406944001855012]
+ [0 0 1 ... 0.28512690440245625 -0.6298645620609679 0.7580456879123474]
+ ...
+ [0 0 1 ... -0.8793075275210709 0.2545230914818251 -0.0026838191316147075]
+ [0 1 0 ... 2.061048287144447 -0.590493131923573 -0.5460620384487302]
+ [0 0 1 ... 3.0 -0.31471299637878436 -0.4373863945853071]]",[0 0 0 ... 0 0 0],"['gender_bin', 'disability_bin', 'age_band_ord', 'age_band_missing_flag', 'highest_education_ord', 'highest_education_missing_flag', 'imd_ordinal', 'imd_unknown_flag', 'nation_England', 'nation_Scotland', 'nation_Wales', 'nation_Northern_Ireland', 'late_registration_flag', 'studied_credits', 'course_type_stem', 'num_of_prev_attempts', 'norm_total_Q3', 'norm_assessment_Q3', 'norm_social_Q3', 'content_ratio_Q3', 'assessment_ratio_Q3', 'social_ratio_Q3', 'dim_entropy_norm_Q3', 'AP_Q3', 'AP_Q3_missing', 'n_submissions_Q3', 'num_late_submissions_Q3', 'n_missed_assessments_Q3', 'n_due_assessments_Q3', 'spacing_score_Q3', 'spacing_defined_Q3', 'active_weeks_ratio_Q3', 'caf_q3_risk_prior', 'caf_q3_z_AP', 'caf_q3_z_total', 'caf_q3_z_active']",[0.00146254 0.25805638 0.06961977 ... 0.05339877 0.06381421 0.04438857],ca_final_tuned,0.9047,"{'clf__alpha': 0.0001, 'clf__hidden_layer_sizes': (64, 32), 'clf__learning_rate_init': 0.001, 'clf__max_iter': 200}"
+Master,Logistic Regression_tuned,0.64,0.8758,0.8567,0.6575,0.744,0.9069,"Pipeline(steps=[('scaler', RobustScaler()),
+                ('clf',
+                 LogisticRegression(C=0.1, class_weight='balanced',
+                                    max_iter=1000, penalty='l1',
+                                    random_state=42, solver='liblinear'))])","[[1 0 2 ... 0.41571035788111727 -0.17440173116893057 0.9732213584513512]
+ [0 0 0 ... -1.208345262071488 -0.6912268514225628 0.6144019914165464]
+ [0 0 1 ... 0.17858460772860824 -0.609196194189814 0.7938116749339488]
+ ...
+ [0 0 1 ... -0.8567230528222286 -0.5833882278373794 -0.4060443549294778]
+ [0 1 0 ... -0.36201711092581457 -1.160050880909893 -1.3453168717222843]
+ [0 0 1 ... -0.9931177559595012 -0.9839580615098613 -1.4627259363213851]]",[0 0 0 ... 0 0 0],"['gender_bin', 'disability_bin', 'age_band_ord', 'age_band_missing_flag', 'highest_education_ord', 'highest_education_missing_flag', 'imd_ordinal', 'imd_unknown_flag', 'nation_England', 'nation_Scotland', 'nation_Wales', 'nation_Northern_Ireland', 'late_registration_flag', 'studied_credits', 'course_type_stem', 'num_of_prev_attempts', 'total_engagement_norm', 'assessment_engagement_norm', 'social_engagement_norm', 'content_ratio_norm', 'assessment_ratio_norm', 'social_ratio_norm', 'active_weeks_ratio_norm', 'AP_full', 'AP_full_missing', 'n_submissions', 'num_late_submissions', 'n_missed_assessments_full', 'n_due_assessments_full', 'spacing_score_full', 'spacing_defined_full', 'caf_master_risk_prior', 'caf_master_z_AP', 'caf_master_z_total', 'caf_master_z_active']",[0.01960974 0.11730827 0.04203109 ... 0.09918523 0.14403639 0.32026272],ca_final_tuned,0.926,"{'clf__C': 0.1, 'clf__penalty': 'l1', 'clf__solver': 'liblinear'}"
+Master,Random Forest_tuned,0.56,0.8891,0.903,0.6676,0.7677,0.9125,"Pipeline(steps=[('scaler', RobustScaler()),
+                ('clf',
+                 RandomForestClassifier(class_weight='balanced', max_depth=10,
+                                        n_estimators=300, n_jobs=-1,
+                                        random_state=42))])","[[1 0 2 ... 0.41571035788111727 -0.17440173116893057 0.9732213584513512]
+ [0 0 0 ... -1.208345262071488 -0.6912268514225628 0.6144019914165464]
+ [0 0 1 ... 0.17858460772860824 -0.609196194189814 0.7938116749339488]
+ ...
+ [0 0 1 ... -0.8567230528222286 -0.5833882278373794 -0.4060443549294778]
+ [0 1 0 ... -0.36201711092581457 -1.160050880909893 -1.3453168717222843]
+ [0 0 1 ... -0.9931177559595012 -0.9839580615098613 -1.4627259363213851]]",[0 0 0 ... 0 0 0],"['gender_bin', 'disability_bin', 'age_band_ord', 'age_band_missing_flag', 'highest_education_ord', 'highest_education_missing_flag', 'imd_ordinal', 'imd_unknown_flag', 'nation_England', 'nation_Scotland', 'nation_Wales', 'nation_Northern_Ireland', 'late_registration_flag', 'studied_credits', 'course_type_stem', 'num_of_prev_attempts', 'total_engagement_norm', 'assessment_engagement_norm', 'social_engagement_norm', 'content_ratio_norm', 'assessment_ratio_norm', 'social_ratio_norm', 'active_weeks_ratio_norm', 'AP_full', 'AP_full_missing', 'n_submissions', 'num_late_submissions', 'n_missed_assessments_full', 'n_due_assessments_full', 'spacing_score_full', 'spacing_defined_full', 'caf_master_risk_prior', 'caf_master_z_AP', 'caf_master_z_total', 'caf_master_z_active']",[0.10002431 0.15548453 0.11796482 ... 0.1873025  0.17295846 0.2289282 ],ca_final_tuned,0.9268,"{'clf__max_depth': 10, 'clf__max_features': 'sqrt', 'clf__min_samples_split': 2, 'clf__n_estimators': 300}"
+Master,XGBoost_tuned,0.64,0.8865,0.8829,0.6759,0.7656,0.9153,"Pipeline(steps=[('scaler', RobustScaler()),
+                ('clf',
+                 XGBClassifier(base_score=None, booster=None, callbacks=None,
+                               colsample_bylevel=None, colsample_bynode=None,
+                               colsample_bytree=0.9, device=None,
+                               early_stopping_rounds=None,
+                               enable_categorical=True, eval_metric='auc',
+                               feature_types=None, feature_weights=None,
+                               gamma=None, grow_policy=None,
+                               importance_type=None,
+                               interaction_constraints=None, learning_rate=0.05,
+                               max_bin=None, max_cat_threshold=None,
+                               max_cat_to_onehot=None, max_delta_step=None,
+                               max_depth=3, max_leaves=None,
+                               min_child_weight=None, missing=nan,
+                               monotone_constraints=None, multi_strategy=None,
+                               n_estimators=300, n_jobs=-1,
+                               num_parallel_tree=None, ...))])","[[1 0 2 ... 0.41571035788111727 -0.17440173116893057 0.9732213584513512]
+ [0 0 0 ... -1.208345262071488 -0.6912268514225628 0.6144019914165464]
+ [0 0 1 ... 0.17858460772860824 -0.609196194189814 0.7938116749339488]
+ ...
+ [0 0 1 ... -0.8567230528222286 -0.5833882278373794 -0.4060443549294778]
+ [0 1 0 ... -0.36201711092581457 -1.160050880909893 -1.3453168717222843]
+ [0 0 1 ... -0.9931177559595012 -0.9839580615098613 -1.4627259363213851]]",[0 0 0 ... 0 0 0],"['gender_bin', 'disability_bin', 'age_band_ord', 'age_band_missing_flag', 'highest_education_ord', 'highest_education_missing_flag', 'imd_ordinal', 'imd_unknown_flag', 'nation_England', 'nation_Scotland', 'nation_Wales', 'nation_Northern_Ireland', 'late_registration_flag', 'studied_credits', 'course_type_stem', 'num_of_prev_attempts', 'total_engagement_norm', 'assessment_engagement_norm', 'social_engagement_norm', 'content_ratio_norm', 'assessment_ratio_norm', 'social_ratio_norm', 'active_weeks_ratio_norm', 'AP_full', 'AP_full_missing', 'n_submissions', 'num_late_submissions', 'n_missed_assessments_full', 'n_due_assessments_full', 'spacing_score_full', 'spacing_defined_full', 'caf_master_risk_prior', 'caf_master_z_AP', 'caf_master_z_total', 'caf_master_z_active']",[0.03711454 0.22645763 0.07828294 ... 0.15091716 0.13628018 0.18908492],ca_final_tuned,0.9311,"{'clf__colsample_bytree': 0.9, 'clf__learning_rate': 0.05, 'clf__max_depth': 3, 'clf__n_estimators': 300, 'clf__subsample': 0.7}"
+Master,SVM_tuned,0.58,0.8814,0.8901,0.6478,0.7499,0.9048,"Pipeline(steps=[('scaler', RobustScaler()),
+                ('clf',
+                 SVC(C=1, cache_size=500, class_weight='balanced',
+                     probability=True, random_state=42))])","[[1 0 2 ... 0.41571035788111727 -0.17440173116893057 0.9732213584513512]
+ [0 0 0 ... -1.208345262071488 -0.6912268514225628 0.6144019914165464]
+ [0 0 1 ... 0.17858460772860824 -0.609196194189814 0.7938116749339488]
+ ...
+ [0 0 1 ... -0.8567230528222286 -0.5833882278373794 -0.4060443549294778]
+ [0 1 0 ... -0.36201711092581457 -1.160050880909893 -1.3453168717222843]
+ [0 0 1 ... -0.9931177559595012 -0.9839580615098613 -1.4627259363213851]]",[0 0 0 ... 0 0 0],"['gender_bin', 'disability_bin', 'age_band_ord', 'age_band_missing_flag', 'highest_education_ord', 'highest_education_missing_flag', 'imd_ordinal', 'imd_unknown_flag', 'nation_England', 'nation_Scotland', 'nation_Wales', 'nation_Northern_Ireland', 'late_registration_flag', 'studied_credits', 'course_type_stem', 'num_of_prev_attempts', 'total_engagement_norm', 'assessment_engagement_norm', 'social_engagement_norm', 'content_ratio_norm', 'assessment_ratio_norm', 'social_ratio_norm', 'active_weeks_ratio_norm', 'AP_full', 'AP_full_missing', 'n_submissions', 'num_late_submissions', 'n_missed_assessments_full', 'n_due_assessments_full', 'spacing_score_full', 'spacing_defined_full', 'caf_master_risk_prior', 'caf_master_z_AP', 'caf_master_z_total', 'caf_master_z_active']",[0.02526697 0.07601846 0.03551188 ... 0.04160641 0.07552892 0.20577232],ca_final_tuned,0.9225,"{'clf__C': 1, 'clf__gamma': 'scale', 'clf__kernel': 'rbf'}"
+Master,MLP_tuned,0.62,0.8795,0.927,0.609,0.7351,0.908,"Pipeline(steps=[('scaler', RobustScaler()),
+                ('clf',
+                 MLPClassifier(early_stopping=True, hidden_layer_sizes=(128,),
+                               learning_rate_init=0.01, random_state=42))])","[[1 0 2 ... 0.41571035788111727 -0.17440173116893057 0.9732213584513512]
+ [0 0 0 ... -1.208345262071488 -0.6912268514225628 0.6144019914165464]
+ [0 0 1 ... 0.17858460772860824 -0.609196194189814 0.7938116749339488]
+ ...
+ [0 0 1 ... -0.8567230528222286 -0.5833882278373794 -0.4060443549294778]
+ [0 1 0 ... -0.36201711092581457 -1.160050880909893 -1.3453168717222843]
+ [0 0 1 ... -0.9931177559595012 -0.9839580615098613 -1.4627259363213851]]",[0 0 0 ... 0 0 0],"['gender_bin', 'disability_bin', 'age_band_ord', 'age_band_missing_flag', 'highest_education_ord', 'highest_education_missing_flag', 'imd_ordinal', 'imd_unknown_flag', 'nation_England', 'nation_Scotland', 'nation_Wales', 'nation_Northern_Ireland', 'late_registration_flag', 'studied_credits', 'course_type_stem', 'num_of_prev_attempts', 'total_engagement_norm', 'assessment_engagement_norm', 'social_engagement_norm', 'content_ratio_norm', 'assessment_ratio_norm', 'social_ratio_norm', 'active_weeks_ratio_norm', 'AP_full', 'AP_full_missing', 'n_submissions', 'num_late_submissions', 'n_missed_assessments_full', 'n_due_assessments_full', 'spacing_score_full', 'spacing_defined_full', 'caf_master_risk_prior', 'caf_master_z_AP', 'caf_master_z_total', 'caf_master_z_active']",[0.00907321 0.11652772 0.04658269 ... 0.05938521 0.13869986 0.21009749],ca_final_tuned,0.928,"{'clf__alpha': 0.0001, 'clf__hidden_layer_sizes': (128,), 'clf__learning_rate_init': 0.01, 'clf__max_iter': 200}"

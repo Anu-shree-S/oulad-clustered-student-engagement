@@ -1,16 +1,15 @@
 [
   {
     "cluster_id":0,
-    "label":"Deadline-Concentrated Pattern",
-    "summary":"This historical behavioural cluster shows more room to build Study Timing and Study Consistency.",
+    "label":"Mixed Learning Pattern",
+    "summary":"This historical behavioural cluster shows relative strengths in Study Timing; more room to build Study Consistency.",
     "strengths":[
-
+      "Study Timing"
     ],
     "opportunities":[
-      "Study Timing",
       "Study Consistency"
     ],
-    "n_historical_learners":149
+    "n_historical_learners":517
   },
   {
     "cluster_id":1,
@@ -22,18 +21,6 @@
     "opportunities":[
 
     ],
-    "n_historical_learners":18842
-  },
-  {
-    "cluster_id":2,
-    "label":"Mixed Learning Pattern",
-    "summary":"This historical behavioural cluster shows relative strengths in Study Timing.",
-    "strengths":[
-      "Study Timing"
-    ],
-    "opportunities":[
-
-    ],
-    "n_historical_learners":559
+    "n_historical_learners":16945
   }
 ]
